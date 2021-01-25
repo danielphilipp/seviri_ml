@@ -12,9 +12,29 @@ COMPILE
 -------------------------------------------
 1. Edit make.config:
    - Select compilers (CC / F90)
-   - Set full path to your numpy includes (NUMPYINCLUDE) typically located at: /path/to/your/python/lib/python3.6/site-packages/numpy/core/include/numpy
-   - Set full path to your Python includes (PYINCLUDE) typically located at: /path/to/your/python/include/python3.6m
-2. Type "make"
+   - Set full path to your numpy includes (NUMPYINCLUDE) typically located at: '/path/to/your/python/lib/python3.x/site-packages/numpy/core/include/numpy'.
+     '/path/to/your/python/lib/python3.x' can be determined with the shell command 'python3-config --ldflags'.
+   - Set full path to your Python includes (PYINCLUDE). You can find your PYINCLUDES with the following shell command: 'python3-config --includes'
+2. Run 'make'.
+3. static library 'libsevann.a' will be created.
+4. Fortran module file 'SEVIRI_NEURAL_NET_M.mod' for use 
+   inside ORAC will be created.
 
 USE WITH ORAC
 -------------------------------------------
+1. Compile this library as described above.
+2. Edit nn_driver.txt according to your needs.
+2. Add the seviri_ml library to your ORAC LIB file e.g. 'LIBS += -L$(SEVML_DIR) -lsevann'.
+4. Add NUMPYINCLUDE and PYINCLUDE from make.config to your main ORAC LIB file
+5. Add Python libs to your main ORAC LIB FILE. You can find your Python libraries with the following shell command: 'python3-config --ldflags'
+3. Compile the pre_processor with 
+   "-DINCLUDE_SEVIRI_NEURALNET" macro.
+4. Run ORAC with preproc driver option 
+   "USE_SEVIRI_ANN=True" (default is to False) and 
+   "USE_GSICS=True" (default is to True).
+   
+USE WITH PYTHON
+-------------------------------------------
+1. Import predictCPHCOT.py into your main script.
+2. Call predictCPHCOT.predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087, ir108, ir120, ir134, lsm, skt)
+3. The function returns a list with following structure: CMA_regression, CMA_binary, CMA_uncertainty, CPH_regression, CPH_binary, CPH_uncertainty 
