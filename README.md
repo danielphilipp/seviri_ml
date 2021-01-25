@@ -24,7 +24,7 @@ USE WITH ORAC
 -------------------------------------------
 1. Compile this library as described above.
 2. Edit nn_driver.txt according to your needs.
-2. Add the seviri_ml library to your ORAC LIB file e.g. 'LIBS += -L$(SEVML_DIR) -lsevann'.
+2. Add the seviri_ml library to your ORAC LIB file e.g. '-L$(SEVML_DIR) -lsevann'.
 4. Add NUMPYINCLUDE and PYINCLUDE from make.config to your main ORAC LIB file
 5. Add Python libs to your main ORAC LIB FILE. You can find your Python libraries with the following shell command: 'python3-config --ldflags'
 3. Compile the pre_processor with 
