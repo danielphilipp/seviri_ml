@@ -12,10 +12,8 @@ COMPILE
 -------------------------------------------
 1. Edit make.config:
    - Select compilers (CC / F90)
-   - Set full path to your numpy includes (NUMPYINCLUDE)
-     Typically located at: /path/to/your/python/lib/python3.6/site-packages/numpy/core/include/numpy
-   - Set full path to your Python includes (PYINCLUDE)
-     Typically located at: /path/to/your/python/include/python3.6m
+   - Set full path to your numpy includes (NUMPYINCLUDE) typically located at: /path/to/your/python/lib/python3.6/site-packages/numpy/core/include/numpy
+   - Set full path to your Python includes (PYINCLUDE) typically located at: /path/to/your/python/include/python3.6m
 2. Type "make"
 
 USE WITH ORAC
