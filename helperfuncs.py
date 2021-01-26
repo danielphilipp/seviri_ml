@@ -34,7 +34,7 @@ def all_same(items):
     return all(x == items[0] for x in items)
 
 
-def _get_driver_opts():
+def _get_driver_opts(backend):
     """ Set path to driver file and read driver file. """
     # read driver file for SEVIRI neural network
     # assume driver file is in same directory as this file
@@ -43,7 +43,7 @@ def _get_driver_opts():
     drifile = 'nn_driver.txt'
     ptf = os.path.join(basepath, drifile)
     logging.info("SEVIRI ANN DRIVER: {}".format(ptf))
-    return readdriver.parse_nn_driver(ptf)
+    return readdriver.parse_nn_driver(ptf, backend)
 
 
 def check_theano_version(modelpath):
@@ -60,6 +60,22 @@ def check_theano_version(modelpath):
               'lead to errors or unexpected behaviour.'
         msg = msg.format(cot_version, curr_version)
         logging.warning(msg)
+
+def check_tensorflow_version(modelpath):
+   """
+    Check if installed Tensorflow version matches the
+    Tensorflow version used for training.
+    """
+    import tensorflow
+    cot_version = modelpath.split('__')[1]
+    curr_version = theano.__version__
+    if curr_version != cot_version:
+        msg = 'WARNING: Mismatch between TF version {} for training ' + \
+              'and your currently used version {}. Version mismatch may' + \
+              'lead to errors or unexpected behaviour.'
+        msg = msg.format(cot_version, curr_version)
+        logging.warning(msg)
+
 
 
 class ConfigTheano:

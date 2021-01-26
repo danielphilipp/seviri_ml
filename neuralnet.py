@@ -89,6 +89,8 @@ class NetworkCPH(NetworkBase):
         
         if backend == 'THEANO':
             hf.check_theano_version(modelpath)
+        else:
+            hf.check_tensorflow_version(modelpath)
 
         super().__init__(modelpath, scalerpath, backend)
 
@@ -104,5 +106,7 @@ class NetworkCOT(NetworkBase):
 
         if backend == 'THEANO':
             hf.check_theano_version(modelpath)
+        else:
+            hf.check_tensorflow_version(modelpath)
 
         super().__init__(modelpath, scalerpath, backend)
