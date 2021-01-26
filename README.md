@@ -5,8 +5,19 @@ REQUIREMENTS
 -------------------------------------------
 - C compiler (recommended gfortran or Cray C compiler)
 - Fortran 90 compiler (recommended gfortran or Cray Fortran compiler)
-- Python 3.6.x (other Python versions not tested)
-- Theano 1.0.4
+- Run seviri_ml with Theano:
+   - Python 3.6 (other Python versions not tested)
+   - Theano 1.0.4 recommended
+- Run seviri_ml with Tensorflow 2:
+   - Python 3.5 - 3.8
+   - Tensorflow 2.4.1 recommended
+   
+THEANO OR TENSORFLOW
+-------------------------------------------
+In this repo models trained with two different backends are available:
+   - Theano 1.0.4 (outdated but runs at ECMWF HPC)
+   - Tensorflow 2.4.1 (consequently updated)
+Both are provided in './data'. To select a certain backend set environment variable 'SEVIRI_ML_BACKEND' to either 'TENSORFLOW' or 'THEANO'. Default behaviour is 'TENSORFLOW'.
 
 COMPILE
 -------------------------------------------
@@ -19,6 +30,10 @@ COMPILE
 3. static library 'libsevann.a' will be created.
 4. Fortran module file 'SEVIRI_NEURAL_NET_M.mod' for use 
    inside ORAC will be created.
+
+DRIVER FILE
+-------------------------------------------
+The driver file 'nn_driver.txt' defines the basic behaviour of seviri_ml. If you use the provided model files with the given filename within the standard directory (./data) you won't have to modify anything for options 1 - 5. Options 6 and 7 are Theano specific and are not read if backend is Tensorflow. Options 8 - 19 are specific for the provided networks and should not be changed unless you might use your own model with different characteristics. Using non-standard (your own) models at your own risks.
 
 USE WITH ORAC
 -------------------------------------------
@@ -33,7 +48,7 @@ USE WITH ORAC
    "USE_SEVIRI_ANN=True" (default is to False) and 
    "USE_GSICS=True" (default is to True).
    
-USE WITH PYTHON
+USE WITH PURE PYTHON
 -------------------------------------------
 1. Import predictCPHCOT.py into your main script.
 2. Edit nn_driver.txt according to your needs.
