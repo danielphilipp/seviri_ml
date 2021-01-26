@@ -18,7 +18,7 @@ In this repo models trained with two different backends are available:
    - Theano 1.0.4 (outdated but runs at ECMWF HPC)
    - Tensorflow 2.4.1 (consequently updated)
 
-Both are provided in './data'. To select a certain backend set environment variable 'SEVIRI_ML_BACKEND' to either 'TENSORFLOW' or 'THEANO'. Default behaviour is 'TENSORFLOW'.
+Both are provided in './data'. To select a certain backend set environment variable 'SEVIRI_ML_BACKEND' to either 'TENSORFLOW' or 'THEANO'. Default behaviour is 'TENSORFLOW'. Using Tensorflow 2 is recommended but can be sketchy to install and run on some machines.
 
 COMPILE
 -------------------------------------------
