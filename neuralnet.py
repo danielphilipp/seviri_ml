@@ -51,8 +51,9 @@ class NetworkBase:
     def get_model(self):
         """ Load Tensorflow or Theano trained model (.h5 file) from disk. """
 
-        if self.backend.lower() == 'tensorflow':
-            raise NotImplementedError('Tensorflow backendnot implemented yet.')
+        if self.backend.lower() == 'tensorflow2':
+            logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
+            os.environ['KERAS_BACKEND'] = 'tensorflow'
 
         elif self.backend.lower() == 'theano':
             logging.info('Setting KERAS_BACKEND env. variable  to theano')
@@ -85,8 +86,9 @@ class NetworkCPH(NetworkBase):
         modelpath = opts['CPH_MODEL_FILEPATH']
         scalerpath = opts['CPH_SCALING_FILEPATH']
         backend = opts['BACKEND']
-
-        hf.check_theano_version(modelpath)
+        
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpath)
 
         super().__init__(modelpath, scalerpath, backend)
 
@@ -100,6 +102,7 @@ class NetworkCOT(NetworkBase):
         scalerpath = opts['COT_SCALING_FILEPATH']
         backend = opts['BACKEND']
 
-        hf.check_theano_version(modelpath)
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpath)
 
         super().__init__(modelpath, scalerpath, backend)

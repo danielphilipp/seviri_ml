@@ -1,20 +1,30 @@
-#PATHS TO CPH/COT MODEL/SCALING FILES
-COT_SCALING_FILEPATH   =  /absolute_path_to_your_seviri_ml/data/SCALER_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO.pkl
+##############################################################################
+### MODIFY IF YOUR MODEL AND SCALING FILES ARE IN A NON-STANDARD LOCATION ####
+##############################################################################
+#PATH TO CPH/COT MODEL/SCALING FILES. IF DATA_PATH IS NONE ./data IS ASSUMED
+DATA_PATH = None
 
-CPH_SCALING_FILEPATH   =  /absolute_path_to_your_seviri_ml/data/SCALER_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO.pkl
+##############################################################################
+####### MODIFY IF YOUR MODEL AND SCALING FILES ARE NOT THE DEFAULT ONES ######
+##############################################################################
+#FILENAMES OF SCALING/MODEL FILES. KEEP NONE IF YOU WANT TO USE THE PROVIDED
+#ONES.
+COT_MODEL_FILENAME = None
+CPH_MODEL_FILENAME = None
+COT_SCALER_FILENAME = None
+CPH_SCALER_FILENAME = None
 
-COT_MODEL_FILEPATH     =  /absolute_path_to_your_seviri_ml/data/MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__.h5
-
-CPH_MODEL_FILEPATH     =  /absolute_path_to_your_seviri_ml/data/MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__.h5
-
-#ML BACKEND TO BE USED (THEANO)
-BACKEND                =  THEANO
-
+###############################################################################
+######## ONLY READ IF ENVIRONMENT VARIABLE SEVIRI_ML_BACKEND IS THEANO ########
+###############################################################################
 #LOCK THEANO COMPILE DIRECTORY IF USING MULTIPLE PROCESSES (TRUE/FALSE)
 #SHOULD BE TRUE IF YOU ARE RUNNING MULTIPLE PROCESSES TO AVOID PROBLEMS. 
 #TRUE IS DEFAULT BEHAVIOUR
 USE_THEANO_COMPILEDIR_LOCK = True
 
+################################################################################
+######### ONLY READ IF ENVIRONMENT VARIABLE SEVIRI_ML_BACKEND IS THEANO ########
+################################################################################
 #TO AVOID LOCK WARNINGS FLOODING YOUR SCREEN WHEN RUNNING MULTIPLE
 #PROCESSES YOU HAVE AN OPTION TO DEFINE A COMPILE DIRECTORY FOR EACH
 #PROCESS USING ITS PID. THE MODEL HAS TO BE COMPILED AGAIN FOR EACH 
@@ -23,6 +33,7 @@ USE_THEANO_COMPILEDIR_LOCK = True
 #THE UNIQUE PROCESS PID IS APPENDED TO YOU BASE_COMPILEDIR SET 
 #IN ~/.theanorc. DEFAULT IS FALSE
 USE_PID_COMPILEDIR = False
+
 
 # ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING
 NN_COT_THRESHOLD          = 0.2

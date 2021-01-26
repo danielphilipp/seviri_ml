@@ -23,6 +23,7 @@
 import neuralnet
 import numpy as np
 import time
+import os
 import logging
 import helperfuncs as hf
 from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
@@ -32,9 +33,27 @@ fmt = '%(levelname)s : %(filename)s : %(message)s'
 logging.basicConfig(level=logging.DEBUG,
                     format=fmt)
 
-opts = hf._get_driver_opts()
+backend = os.environ.get('SEVIRI_ML_BACKEND')
+if backend is not None:
+    backend = backend.upper()
+else:
+    # default behaviour
+    backend = 'TENSORFLOW2'
+    logging.info('SEVIRI_ML_BACKEND env variable not defined. Setting backend to
+                  default {}'.format(backend))
 
-Tconfig = hf.ConfigTheano(opts)
+
+if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
+    backend = 'TENSORFLOW2'
+elif backend == 'THEANO':
+    backend = 'THEANO'
+else:
+    raise Exception('Backend {} is invalid'.format(backend))
+
+opts = hf._get_driver_opts(backend)
+
+if backend == 'THEANO':
+    Tconfig = hf.ConfigTheano(opts)
 
 
 def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,

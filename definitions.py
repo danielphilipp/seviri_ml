@@ -27,11 +27,11 @@ DATA_NAMES = ['ir039', 'ir087', 'ir087_108', 'ir108', 'ir108_120',
 TRUE_OPTS = ['true', 'True', 'T', 't', '1', '.True.', '.true.']
 FALSE_OPTS = ['false', 'False', 'F', 'f', '0', '.False.', '.false.']
 
-MANDATORY_OPTS = {'COT_SCALING_FILEPATH': 'PATH',
-                  'CPH_SCALING_FILEPATH': 'PATH',
-                  'COT_MODEL_FILEPATH': 'PATH',
-                  'CPH_MODEL_FILEPATH': 'PATH',
-                  'BACKEND': 'STR',
+MANDATORY_OPTS = {'DATA_PATH': 'PATH',
+                  'COT_MODEL_FILENAME': 'PATH',
+                  'COT_SCALER_FILENAME': 'PATH',
+                  'CPH_MODEL_FILENAME': 'PATH',
+                  'CPH_SCALER_FILENAME': 'PATH',
                   'USE_THEANO_COMPILEDIR_LOCK': 'BOOL',
                   'USE_PID_COMPILEDIR': 'BOOL',
                   'NN_COT_THRESHOLD': 'FLOAT',
@@ -47,3 +47,13 @@ MANDATORY_OPTS = {'COT_SCALING_FILEPATH': 'PATH',
                   'UNC_ICE_MIN': 'FLOAT',
                   'UNC_ICE_MAX': 'FLOAT'
                   }
+
+DEFAULT_THEANO_MODEL_COT = 'MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v1.h5'
+DEFAULT_THEANO_MODEL_CPH = 'MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v1.h5' 
+
+DEFAULT_TF2_MODEL_COT = 'MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_TF2_v1.h5'
+DEFAULT_TF2_MODEL_CPH = 'MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM_LR-0001_NE-300_BS-200_GSICS_TF2_v1.h5'
+
+DEFAULT_SCALER_CPH = 'SCALER_CPH_GSICS_v1.pkl'
+DEFAULT_SCALER_COT = 'SCALER_CMA_GSICS_v1.pkl'
+
