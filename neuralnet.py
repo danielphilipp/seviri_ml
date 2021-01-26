@@ -54,6 +54,7 @@ class NetworkBase:
         if self.backend.lower() == 'tensorflow2':
             logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
             os.environ['KERAS_BACKEND'] = 'tensorflow'
+            from tensorflow.keras.models import load_mode
 
         elif self.backend.lower() == 'theano':
             logging.info('Setting KERAS_BACKEND env. variable  to theano')
@@ -84,7 +85,7 @@ class NetworkCPH(NetworkBase):
         self.opts = opts
 
         modelpath = opts['CPH_MODEL_FILEPATH']
-        scalerpath = opts['CPH_SCALING_FILEPATH']
+        scalerpath = opts['CPH_SCALER_FILEPATH']
         backend = opts['BACKEND']
         
         if backend == 'THEANO':
@@ -101,7 +102,7 @@ class NetworkCOT(NetworkBase):
         self.opts = opts
 
         modelpath = opts['COT_MODEL_FILEPATH']
-        scalerpath = opts['COT_SCALING_FILEPATH']
+        scalerpath = opts['COT_SCALER_FILEPATH']
         backend = opts['BACKEND']
 
         if backend == 'THEANO':

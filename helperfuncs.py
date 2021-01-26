@@ -62,13 +62,13 @@ def check_theano_version(modelpath):
         logging.warning(msg)
 
 def check_tensorflow_version(modelpath):
-   """
+    """
     Check if installed Tensorflow version matches the
     Tensorflow version used for training.
     """
     import tensorflow
     cot_version = modelpath.split('__')[1]
-    curr_version = theano.__version__
+    curr_version = tensorflow.__version__
     if curr_version != cot_version:
         msg = 'WARNING: Mismatch between TF version {} for training ' + \
               'and your currently used version {}. Version mismatch may' + \

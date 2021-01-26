@@ -39,9 +39,7 @@ if backend is not None:
 else:
     # default behaviour
     backend = 'TENSORFLOW2'
-    logging.info('SEVIRI_ML_BACKEND env variable not defined. Setting backend to
-                  default {}'.format(backend))
-
+    logging.info('SEVIRI_ML_BACKEND env variable not defined. Setting backend to default {}'.format(backend))
 
 if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
     backend = 'TENSORFLOW2'
