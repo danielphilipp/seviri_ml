@@ -34,14 +34,18 @@ USE_THEANO_COMPILEDIR_LOCK = True
 #IN ~/.theanorc. DEFAULT IS FALSE
 USE_PID_COMPILEDIR = False
 
-
-# ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING
+################################################################################
+############## ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING ######################
+################################################################################
+# THRESHOLDS TO CONVERT REGRESSION => BINARY 
 NN_COT_THRESHOLD          = 0.2
 NN_CPH_THRESHOLD          = 0.5
 
+# REGRESSION VALUE LIMITS
 VALID_REGRESSION_MAX   = 1.0
 VALID_REGRESSION_MIN   = 0.0
 
+# UNCERTAINTY CHARACTERIZATION
 UNC_CLD_MIN      = 0.00000
 UNC_CLD_MAX      = 44.9588
 
