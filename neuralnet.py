@@ -54,7 +54,7 @@ class NetworkBase:
         if self.backend.lower() == 'tensorflow2':
             logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
             os.environ['KERAS_BACKEND'] = 'tensorflow'
-            from tensorflow.keras.models import load_mode
+            from tensorflow.keras.models import load_model
 
         elif self.backend.lower() == 'theano':
             logging.info('Setting KERAS_BACKEND env. variable  to theano')
