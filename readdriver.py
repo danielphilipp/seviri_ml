@@ -91,10 +91,6 @@ def _check_parsed_opts(opts):
                 msg = msg.format(opts[opt], opt)
                 raise Exception(msg)
 
-        if opt == 'BACKEND':
-            if opts[opt] != 'THEANO':
-                msg = 'BACKEND {} not valid. Use THEANO.'
-                raise Exception(msg.format(opts[opt]))
     return opts
 
 
