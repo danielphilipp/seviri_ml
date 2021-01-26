@@ -30,53 +30,57 @@ def _check_parsed_opts(opts):
                 raise Exception('DATA_PATH {} does not exist'.format(opts[opt]))
 
         if opt == 'COT_MODEL_FILENAME':
+            fp_opt = 'COT_MODEL_FILEPATH'
             if opts[opt].upper() == 'NONE':
                 if opts['BACKEND'] == 'THEANO':
-                    opts['COT_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'], 
-                                                              DEFAULT_THEANO_MODEL_COT)
+                    opts[fp_opt] = os.path.join(opts['DATA_PATH'], 
+                                                DEFAULT_THEANO_MODEL_COT)
                 else:
-                    opts['COT_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                              DEFAULT_TF2_MODEL_COT)
+                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                                DEFAULT_TF2_MODEL_COT)
             else:
-                opts['COT_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                          opts[opt] )
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            opts[opt] )
 
-            if not os.path.isfile(opts['COT_MODEL_FILEPATH']):
-                raise Exception('COT_MODEL_FILEPATH {} does not exist'.format(opts['COT_MODEL_FILEPATH']))
+            if not os.path.isfile(opts[fp_opt]):
+                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
 
         if opt == 'CPH_MODEL_FILENAME':
+            fp_opt = 'CPH_MODEL_FILEPATH'
             if opts[opt].upper() == 'NONE':
                 if opts['BACKEND'] == 'THEANO':
-                    opts['CPH_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                              DEFAULT_THEANO_MODEL_CPH)
+                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                                DEFAULT_THEANO_MODEL_CPH)
                 else:
-                    opts['CPH_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                              DEFAULT_TF2_MODEL_CPH)
+                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                                DEFAULT_TF2_MODEL_CPH)
             else:
-                opts['CPH_MODEL_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                          opts[opt])
-            if not os.path.isfile(opts['CPH_MODEL_FILEPATH']):
-                raise Exception('CPH_MODEL_FILEPATH {} does not exist'.format(opts['CPH_MODEL_FILEPATH']))
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            opts[opt])
+            if not os.path.isfile(opts[fp_opt]):
+                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
 
         if opt == 'CPH_SCALER_FILENAME':
+            fp_opt = 'CPH_SCALER_FILEPATH'
             if opts[opt].upper() == 'NONE':
-                opts['CPH_SCALER_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                           DEFAULT_SCALER_CPH)
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            DEFAULT_SCALER_CPH)
             else:
-                opts['CPH_SCALER_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                           opts[opt])
-            if not os.path.isfile(opts['CPH_SCALER_FILEPATH']):
-                raise Exception('CPH_SCALER_FILEPATH {} does not exist'.format(opts['CPH_SCALER_FILEPATH']))
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            opts[opt])
+            if not os.path.isfile(opts[fp_opt]):
+                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
 
         if opt == 'COT_SCALER_FILENAME':
+            fp_opt = 'COT_SCALER_FILEPATH'
             if opts[opt].upper() == 'NONE':
-                opts['COT_SCALER_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                         DEFAULT_SCALER_COT)
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            DEFAULT_SCALER_COT)
             else:
-                opts['COT_SCALER_FILEPATH'] = os.path.join(opts['DATA_PATH'],
-                                                           opts[opt])
-            if not os.path.isfile(opts['COT_SCALER_FILEPATH']):
-                raise Exception('COT_SCALER_FILEPATH {} does not exist'.format(opts['COT_SCALER_FILEPATH']))
+                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
+                                            opts[opt])
+            if not os.path.isfile(opts[fp_opt]):
+                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
 
         if filetype == 'FLOAT':
             opts[opt] = float(opts[opt])
