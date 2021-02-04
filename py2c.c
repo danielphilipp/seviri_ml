@@ -19,9 +19,9 @@
 
 
 void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039, 
-				   void *ir062, void *ir073, void *ir087, void *ir108, 
-				   void *ir120, void *ir134, void *lsm, void *skt, 
-				   int *nx, int *ny, float *reg_cot, char *bin_cot, 
+                   void *ir062, void *ir073, void *ir087, void *ir108, 
+                   void *ir120, void *ir134, void *lsm, void *skt, 
+                   int *nx, int *ny, float *reg_cot, char *bin_cot, 
                    float *unc_cot, float *reg_cph, char *bin_cph, 
                    float *unc_cph)
 {
