@@ -39,9 +39,17 @@ def _get_driver_opts(backend):
     # read driver file for SEVIRI neural network
     # assume driver file is in same directory as this file
 
+    # if environment variable is set use non-standard driver
+    # file name
+    if "SEVIRI_ML_DRIVER_FILENAME" in os.environ:
+        drifile = os.environ.get("SEVIRI_ML_DRIVER_FILENAME")
+    else:
+        drifile = 'nn_driver.txt'
+
     basepath = os.path.dirname(os.path.realpath(__file__))
-    drifile = 'nn_driver.txt'
     ptf = os.path.join(basepath, drifile)
+    if not os.path.isfile(ptf):
+        raise Exception('Driver file {} does not exist'.format(ptf))
     logging.info("SEVIRI ANN DRIVER: {}".format(ptf))
     return readdriver.parse_nn_driver(ptf, backend)
 
