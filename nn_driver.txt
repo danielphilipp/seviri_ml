@@ -38,8 +38,8 @@ USE_PID_COMPILEDIR = False
 ############## ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING ######################
 ################################################################################
 # THRESHOLDS TO CONVERT REGRESSION => BINARY 
-NN_COT_THRESHOLD          = 0.2
-NN_CPH_THRESHOLD          = 0.5
+NN_COT_THRESHOLD          = 0.12
+NN_CPH_THRESHOLD          = 0.50
 
 # REGRESSION VALUE LIMITS
 VALID_REGRESSION_MAX   = 1.0

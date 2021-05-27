@@ -55,12 +55,15 @@ if backend == 'THEANO':
 
 
 def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                          ir108, ir120, ir134, lsm, skt, networks):
+                          ir108, ir120, ir134, lsm, skt, solzen, networks,
+                          undo_true_refl):
     """
         Prepare input array for the neural network. Takes required feature
         arrays, flattens them using row-major ordering and combines all flat
         arrays into a single array with shape (nsamples, nfeatures) to be
-        used for prediction.
+        used for prediction. VIS channel reflectances are expected to be in 
+        the 0-1 range. Conversion to 0-100 (as training data) range 
+        performed internally.
 
         Input:
         - vis006 (2d numpy array): SEVIRI VIS 0.6 um (Ch 1)
@@ -75,14 +78,32 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         - ir134 (2d numpy array):  SEVIRI IR 13.4 um  (Ch 11)
         - lsm (2d numpy array):    Land-sea mask
         - skt (2d numpy array):    (ERA5) Skin Temperature
+        - solzen (2d numpy array): Solar Zenith Angle
 
         Return:
         - idata (2d numpy array): Scaled input array for ANN
     """
 
+    # set reflectances below 0 to 0
     vis006[vis006 < 0] = 0
     vis008[vis008 < 0] = 0
     nir016[nir016 < 0] = 0
+
+    # multiply reflectances by 100 to convert from 0-1 
+    # to 0-100 range as training data. Satpy outputs 
+    # 0-100 whereas SEVIRI util outputs 0-1.
+    vis006 *= 100.
+    vis008 *= 100.
+    nir016 *= 100.
+
+    # remove true reflectances
+    if undo_true_refl:
+        logging.info('Removing true reflectances')
+        cond = np.logical_and(solzen >= 0., solzen < 90.)
+        cos_sza =  np.cos(np.deg2rad(solzen))
+        vis006 = np.where(cond, vis006 * cos_sza, vis006)
+        vis008 = np.where(cond, vis008 * cos_sza, vis008)
+        nir016 = np.where(cond, nir016 * cos_sza, nir016)
 
     # calculate channel differences
     ir087_108 = ir087 - ir108
@@ -297,7 +318,8 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
 
 
 def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                    ir108, ir120, ir134, lsm, skt):
+                    ir108, ir120, ir134, lsm, skt, solzen, 
+                    undo_true_refl=False):
     """
         Main function that calls the neural network for COT and
         CPH prediction.
@@ -335,8 +357,8 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     prepped = _prepare_input_arrays(vis006, vis008, nir016,
                                     ir039, ir062, ir073,
                                     ir087, ir108, ir120,
-                                    ir134, lsm, skt,
-                                    networks
+                                    ir134, lsm, skt, solzen,
+                                    networks, undo_true_refl
                                     )
     (scaled_data, dims, masks) = prepped
     t = time.time() - start

@@ -30,7 +30,7 @@ module seviri_neural_net_m
     interface
         subroutine py_neural_net(vis006, vis008, nir016, ir039, & 
                                  ir062, ir073, ir087, ir108, ir120, &
-                                 ir134, lsm, skt, nx, ny, reg_cot, &
+                                 ir134, lsm, skt, solzen, nx, ny, reg_cot, &
                                  bin_cot, unc_cot, reg_cph, bin_cph, &
                                  unc_cph) bind(C, name="py_neural_net")
             import :: c_ptr
@@ -49,6 +49,7 @@ module seviri_neural_net_m
             type(c_ptr), value :: ir134
             type(c_ptr), value :: lsm
             type(c_ptr), value :: skt
+            type(c_ptr), value :: solzen
             real(c_float), dimension(*), intent(out) :: reg_cot, unc_cot, &
                                                         & reg_cph, unc_cph
             integer(c_char), dimension(*), intent(out) :: bin_cot, bin_cph
@@ -83,6 +84,7 @@ contains
 ! ir134                2darr In  SEVIRI IR134 measurements
 ! lsm                  2darr In  Land-sea mask
 ! skt                  2darr In  Skin temperature
+! solzen               2darr In  Solar Zenith Angle
 ! regression_cot       2darr Out COT NN regression value
 ! binary_cot           2darr Out COT binary value after thresholding (CMA)
 ! uncertainty_cot      2darr Out COT uncertainty of CMA
@@ -92,7 +94,7 @@ contains
 !------------------------------------------------------------------------------
 
 subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
-                        ir087, ir108, ir120, ir134, lsm, skt, regression_cot, &
+                        ir087, ir108, ir120, ir134, lsm, skt, solzen, regression_cot, &
                         binary_cot, uncertainty_cot, regression_cph, &
                         binary_cph, uncertainty_cph)
     use iso_c_binding
@@ -106,7 +108,7 @@ subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir07
     integer(c_int) :: nx ,ny
     real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
                                                & ir062, ir073, ir087, ir108, &
-                                               & ir120, ir134, skt
+                                               & ir120, ir134, skt, solzen
     integer(c_char), dimension(nx,ny), target :: lsm
   
     ! Call Python neural network via Python C-API
@@ -114,8 +116,8 @@ subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir07
                        c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
                        c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
                        c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
-                       nx, ny, regression_cot, binary_cot, uncertainty_cot, &
-                       regression_cph, binary_cph, uncertainty_cph)
+                       c_loc(solzen(1,1)), nx, ny, regression_cot, binary_cot, &
+                       uncertainty_cot, regression_cph, binary_cph, uncertainty_cph)
      
 end subroutine seviri_ann_cph_cot
 

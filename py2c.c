@@ -20,10 +20,10 @@
 
 void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039, 
                    void *ir062, void *ir073, void *ir087, void *ir108, 
-                   void *ir120, void *ir134, void *lsm, void *skt, 
-                   int *nx, int *ny, float *reg_cot, char *bin_cot, 
-                   float *unc_cot, float *reg_cph, char *bin_cph, 
-                   float *unc_cph)
+                   void *ir120, void *ir134, void *lsm, void *skt,
+                   void *solzen, int *nx, int *ny, float *reg_cot, 
+                   char *bin_cot, float *unc_cot, float *reg_cph, 
+                   char *bin_cph, float *unc_cph)
 {
 	
     // initialize Python interpreter
@@ -42,10 +42,12 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
     npy_intp dims[2];
     dims[0] = *nx;
     dims[1] = *ny;
+
+    PyObject *undo_true_refl = Py_True;
 	
     PyObject *mName, *pModule, *pFunc, *args_var;
     PyObject *vis006py, *vis008py, *nir016py, *ir039py, *ir062py, *ir073py; 
-    PyObject *ir087py, *ir108py, *ir120py, *ir134py, *lsmpy, *sktpy;
+    PyObject *ir087py, *ir108py, *ir120py, *ir134py, *lsmpy, *sktpy, *solzenpy;
     PyObject *res;
 	       
     // define and import Python module 
@@ -69,6 +71,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
             ir134py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, ir134);
             lsmpy = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, lsm);
             sktpy = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, skt);
+            solzenpy = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, solzen);
 
             PyArray_ENABLEFLAGS((PyArrayObject*) vis006py, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) vis008py, NPY_ARRAY_OWNDATA);
@@ -82,11 +85,12 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
             PyArray_ENABLEFLAGS((PyArrayObject*) ir134py, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) lsmpy, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) sktpy, NPY_ARRAY_OWNDATA);
+            PyArray_ENABLEFLAGS((PyArrayObject*) solzen, NPY_ARRAY_OWNDATA);
 
             // generate args tuple for function call
-            args_var = PyTuple_Pack(12, vis006py, vis008py, nir016py, ir039py, 
+            args_var = PyTuple_Pack(14, vis006py, vis008py, nir016py, ir039py, 
                                     ir062py, ir073py, ir087py, ir108py, ir120py,
-                                    ir134py, lsmpy, sktpy);
+                                    ir134py, lsmpy, sktpy, solzenpy, undo_true_refl);
                
             // call python function for COT              
             res = PyObject_CallObject(pFunc, args_var);
@@ -144,6 +148,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                 Py_DECREF(ir134py);
                 Py_DECREF(lsmpy);
                 Py_DECREF(sktpy);
+                Py_DECREF(solzen);
                 PyErr_Print();
                 fprintf(stderr, "Call failed\n");
             }
