@@ -143,8 +143,10 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         xdim = data_lst[0].shape[0]
         if len(data_lst[0].shape) == 2:
             ydim = data_lst[0].shape[1]
+            input_is_2d = True
         else:
             ydim = 1
+            input_is_2d = False
     else:
         msg = 'xdim or ydim differ between input arrays for neural network.'
         raise Exception(RuntimeError, msg)
@@ -157,6 +159,8 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
 
     # check for each pixel if any channels is invalid (1), else 0
     has_invalid_item = np.any(np.where(idata < 0, 1, 0), axis=1)
+    if input_is_2d:
+         has_invalid_item = has_invalid_item.reshape((xdim, ydim))
 
     all_chs = np.array([vis006, vis008, nir016, ir039, ir087,
                         ir108, ir120, ir134, ir062, ir073])
@@ -167,7 +171,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # indices of pixels with all channels valid
     all_channels_valid_indxs = np.nonzero(~all_channels_invalid.ravel())
     # dictionary of invalid pixel masks
-    masks = {'hii': has_invalid_item.reshape((xdim, ydim)),
+    masks = {'hii': has_invalid_item,
              'aci': all_channels_invalid,
              'acvi': all_channels_valid_indxs[0]}
 
@@ -175,7 +179,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                    'CPH': networks['CPH'].scale_input(idata)}
 
     # apply scaling to input array
-    return scaled_data, (xdim, ydim), masks
+    return scaled_data, (xdim, ydim), input_is_2d, masks
 
 
 def _select_networks(opts):
@@ -367,7 +371,7 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                                     ir134, lsm, skt, solzen,
                                     networks, undo_true_refl
                                     )
-    (scaled_data, dims, masks) = prepped
+    (scaled_data, dims, input_is_2d, masks) = prepped
     t = time.time() - start
     logging.info("Time for preparing input data: {:.3f}".format(t))
 
@@ -375,7 +379,9 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     v = 'COT'
     start = time.time()
     pred = _run_prediction(v, networks, scaled_data, masks, dims)
-    results_COT = _postproc_prediction(pred.reshape((dims[0], dims[1])),
+    if input_is_2d:
+        pred = pred.reshape((dims[0], dims[1]))
+    results_COT = _postproc_prediction(pred,
                                        v,
                                        networks[v].opts,
                                        masks)
@@ -385,7 +391,9 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     v = 'CPH'
     start = time.time()
     pred = _run_prediction(v, networks, scaled_data, masks, dims)
-    results_CPH = _postproc_prediction(pred.reshape((dims[0], dims[1])),
+    if input_is_2d:
+        pred = pred.reshape((dims[0], dims[1]))
+    results_CPH = _postproc_prediction(pred,
                                        v,
                                        networks[v].opts,
                                        masks)
