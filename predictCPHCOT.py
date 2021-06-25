@@ -141,7 +141,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
 
     if hf.all_same(xdims) and hf.all_same(ydims):
         xdim = data_lst[0].shape[0]
-        if len(data_lst.shape) == 2:
+        if len(data_lst[0].shape) == 2:
             ydim = data_lst[0].shape[1]
         else:
             ydim = 1
