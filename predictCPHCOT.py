@@ -127,17 +127,24 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 ir073       # 14
                 ]
 
+    
     # check if array dimensions are equal throughout all arrays
     # if all dimensions are equal: set dimension constants for reshaping
     xdims = []
     ydims = []
     for tmp in data_lst:
         xdims.append(tmp.shape[0])
-        ydims.append(tmp.shape[1])
+        if len(tmp.shape) == 2:
+            ydims.append(tmp.shape[1])
+        else:
+            ydims.append(1)
 
     if hf.all_same(xdims) and hf.all_same(ydims):
         xdim = data_lst[0].shape[0]
-        ydim = data_lst[0].shape[1]
+        if len(data_lst.shape) == 2:
+            ydim = data_lst[0].shape[1]
+        else:
+            ydim = 1
     else:
         msg = 'xdim or ydim differ between input arrays for neural network.'
         raise Exception(RuntimeError, msg)
