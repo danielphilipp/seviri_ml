@@ -83,27 +83,30 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         Return:
         - idata (2d numpy array): Scaled input array for ANN
     """
-
     # set reflectances below 0 to 0
-    vis006[vis006 < 0] = 0
-    vis008[vis008 < 0] = 0
-    nir016[nir016 < 0] = 0
+    vis006p = vis006.copy()
+    vis008p = vis008.copy()
+    nir016p = nir016.copy()
+
+    vis006p[vis006p < 0] = 0
+    vis008p[vis008p < 0] = 0
+    nir016p[nir016p < 0] = 0
 
     # multiply reflectances by 100 to convert from 0-1 
     # to 0-100 range as training data. Satpy outputs 
     # 0-100 whereas SEVIRI util outputs 0-1.
-    vis006 *= 100.
-    vis008 *= 100.
-    nir016 *= 100.
+    vis006p = vis006p * 100.
+    vis008p = vis008p * 100.
+    nir016p = nir016p * 100.
 
     # remove true reflectances
     if undo_true_refl:
         logging.info('Removing true reflectances')
         cond = np.logical_and(solzen >= 0., solzen < 90.)
         cos_sza =  np.cos(np.deg2rad(solzen))
-        vis006 = np.where(cond, vis006 * cos_sza, vis006)
-        vis008 = np.where(cond, vis008 * cos_sza, vis008)
-        nir016 = np.where(cond, nir016 * cos_sza, nir016)
+        vis006p = np.where(cond, vis006p * cos_sza, vis006p)
+        vis008p = np.where(cond, vis008p * cos_sza, vis008p)
+        nir016p = np.where(cond, nir016p * cos_sza, nir016p)
 
     # calculate channel differences
     ir087_108 = ir087 - ir108
@@ -119,10 +122,10 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 ir120,      # 6
                 ir134,      # 7
                 lsm,        # 8
-                nir016,     # 9
+                nir016p,    # 9
                 skt,        # 10
-                vis006,     # 11
-                vis008,     # 12
+                vis006p,    # 11
+                vis008p,    # 12
                 ir062,      # 13
                 ir073       # 14
                 ]
@@ -151,7 +154,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # check for each pixel if any channels is invalid (1), else 0
     has_invalid_item = np.any(np.where(idata < 0, 1, 0), axis=1)
 
-    all_chs = np.array([vis006, vis008, nir016, ir039, ir087,
+    all_chs = np.array([vis006p, vis008p, nir016p, ir039, ir087,
                         ir108, ir120, ir134, ir062, ir073])
 
     # pixels with all IR channels invalid = 1, else 0 (as VIS can be
