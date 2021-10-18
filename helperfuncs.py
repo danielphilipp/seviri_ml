@@ -97,9 +97,7 @@ class ConfigTheano:
         """ Configure how to deal with compile dir locking. """
         # enable usage of PID dependent compile directory
         # creates new compile_directory
-        print("USE_PID_COMPILEDIR: ", self.use_pid_compiledir)
         if self.use_pid_compiledir:
-            print("Setting PID compiledir 1")
             self._set_pid_compiledir()
     
         # enable or disable compile directory locking
@@ -115,7 +113,6 @@ class ConfigTheano:
         from compile lock, as otherwise Theano uses the
         same compile directory for each process.
         """
-        print("Setting PID compiledir 2")
         pid = os.getpid()
         tflags = os.getenv('THEANO_FLAGS').split(',')
         for f in tflags:
@@ -124,7 +121,6 @@ class ConfigTheano:
 
         cdir_pid = os.path.join(cdir, 'pid' + str(pid))
         self.cdir_pid = cdir_pid
-        print("PID COMPILEDIR: ", self.cdir_pid)
         os.environ['THEANO_FLAGS'] = 'base_compiledir={}'.format(cdir_pid)
 
     def remove_pid_compiledir(self):
