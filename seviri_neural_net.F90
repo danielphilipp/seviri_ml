@@ -113,7 +113,7 @@ subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir07
                                                & ir062, ir073, ir087, ir108, &
                                                & ir120, ir134, skt, solzen
     integer(c_char), dimension(nx,ny), target :: lsm
-    logical(c_bool) :: undo_true_reflectances
+    logical :: undo_true_reflectances
   
     ! Call Python neural network via Python C-API
     call py_neural_net(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
