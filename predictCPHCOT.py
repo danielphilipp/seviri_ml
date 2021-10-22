@@ -195,13 +195,12 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     if input_is_2d:
          has_invalid_item = has_invalid_item.reshape((xdim, ydim))
 
-    #all_chs = np.array([vis006p, vis008p, nir016p, ir039, ir087,
-    #                    ir108, ir120, ir134, ir062, ir073])
+    all_chs = np.array([vis006p, vis008p, nir016p, ir039, ir087,
+                        ir108, ir120, ir134, ir062, ir073])
 
     # pixels with all IR channels invalid = 1, else 0 (as VIS can be
     # at night
-    #all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
-    all_channels_invalid = np.all(np.isnan(idata), axis=1).reshape((xdim, ydim))
+    all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
     # indices of pixels with all channels valid
     all_channels_valid_indxs = np.nonzero(~all_channels_invalid.ravel())
     # dictionary of invalid pixel masks
@@ -313,7 +312,7 @@ def _check_prediction(prediction, opts, masks):
     prediction = np.where(condition, SREAL_FILL_VALUE, prediction)
 
     # mask pixels where all channels are invalid (i.e. space pixels)
-    #prediction = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, prediction)
+    prediction = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, prediction)
     return prediction
 
 
@@ -357,8 +356,7 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     # empty results array
     pred = np.ones((dims[0]*dims[1]), dtype=SREAL) * SREAL_FILL_VALUE
     # fill indices of predicted pixels with predicted value
-    #pred[masks['acvi']] = prediction
-    pred=prediction
+    pred[masks['acvi']] = prediction
 
     return pred
 
