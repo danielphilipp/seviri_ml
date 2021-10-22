@@ -28,6 +28,8 @@ import logging
 import helperfuncs as hf
 from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
                          BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE)
+from nasa_impf_correction import correct_nasa_impf
+
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
 logging.basicConfig(level=logging.DEBUG,
@@ -55,8 +57,8 @@ if backend == 'THEANO':
 
 
 def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                          ir108, ir120, ir134, lsm, skt, solzen, networks,
-                          undo_true_refl):
+                          ir108, ir120, ir134, lsm, skt, solzen, lat, lon, networks,
+                          undo_true_refl, correct_vis_cal_nasa_to_impf):
     """
         Prepare input array for the neural network. Takes required feature
         arrays, flattens them using row-major ordering and combines all flat
@@ -79,6 +81,14 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         - lsm (2d numpy array):    Land-sea mask
         - skt (2d numpy array):    (ERA5) Skin Temperature
         - solzen (2d numpy array): Solar Zenith Angle
+        - undo_true_refl (bool):     Remove true reflectances
+                                     from VIS channels (* solzen)
+        - correct_vis_cal_nasa_to_impf (bool/str):
+                                     Whether to apply linear correction
+                                     to convert NASA calibrated VIS
+                                     channel data to IMPF calibration.
+                                     0 (not applying) or
+                                     [1, 2, 3, 4].
 
         Return:
         - idata (2d numpy array): Scaled input array for ANN
@@ -87,6 +97,17 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     vis006p = vis006.copy()
     vis008p = vis008.copy()
     nir016p = nir016.copy()
+
+    if correct_vis_cal_nasa_to_impf in [1, 2, 3, 4]:
+        logging.info('Correcting VIS channel calibration from NASA to IMPF.')
+        vis006p, vis008p, nir016p = correct_nasa_impf(
+                                            vis006, 
+                                            vis008p, 
+                                            nir016p, 
+                                            correct_vis_cal_nasa_to_impf
+                                            )    
+    else:
+        logging.info('Not correcting VIS channel calibration from NASA to IMPF.')
 
     vis006p[vis006p < 0] = 0
     vis008p[vis008p < 0] = 0
@@ -103,7 +124,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     if undo_true_refl:
         logging.info('Removing true reflectances')
         cond = np.logical_and(solzen >= 0., solzen < 90.)
-        cos_sza =  np.cos(np.deg2rad(solzen))
+        cos_sza = np.cos(np.deg2rad(solzen))
         vis006p = np.where(cond, vis006p * cos_sza, vis006p)
         vis008p = np.where(cond, vis008p * cos_sza, vis008p)
         nir016p = np.where(cond, nir016p * cos_sza, nir016p)
@@ -154,23 +175,33 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         msg = 'xdim or ydim differ between input arrays for neural network.'
         raise Exception(RuntimeError, msg)
 
+    # mask space pixels
+    if input_is_2d:
+        lat1d = lat.ravel()
+        lon1d = lon.ravel()
+    space = np.logical_or(np.logical_or(lat1d < -90, lat1d > 90),
+                          np.logical_or(lon1d < -180, lon1d > 180))
+
     # fill neural network input array with flattened data fields
     idata = np.empty((xdim*ydim, len(data_lst)))
 
     for cnt, d in enumerate(data_lst):
-        idata[:, cnt] = d.ravel()
+        tmp = d.ravel()
+        #tmp[space] = np.nan
+        idata[:, cnt] = tmp
 
     # check for each pixel if any channels is invalid (1), else 0
     has_invalid_item = np.any(np.where(idata < 0, 1, 0), axis=1)
     if input_is_2d:
          has_invalid_item = has_invalid_item.reshape((xdim, ydim))
 
-    all_chs = np.array([vis006p, vis008p, nir016p, ir039, ir087,
-                        ir108, ir120, ir134, ir062, ir073])
+    #all_chs = np.array([vis006p, vis008p, nir016p, ir039, ir087,
+    #                    ir108, ir120, ir134, ir062, ir073])
 
     # pixels with all IR channels invalid = 1, else 0 (as VIS can be
     # at night
-    all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
+    #all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
+    all_channels_invalid = np.all(np.isnan(idata), axis=1).reshape((xdim, ydim))
     # indices of pixels with all channels valid
     all_channels_valid_indxs = np.nonzero(~all_channels_invalid.ravel())
     # dictionary of invalid pixel masks
@@ -282,7 +313,7 @@ def _check_prediction(prediction, opts, masks):
     prediction = np.where(condition, SREAL_FILL_VALUE, prediction)
 
     # mask pixels where all channels are invalid (i.e. space pixels)
-    prediction = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, prediction)
+    #prediction = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, prediction)
     return prediction
 
 
@@ -320,42 +351,54 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     # select scaled data for correct variable
     idata = scaled_data[variable]
     # predict only pixels indices where all channels are valid
-    idata = idata[masks['acvi'], :]
+    #idata = idata[masks['acvi'], :]
     # run prediction on valid pixels
     prediction = np.squeeze(model.predict(idata)).astype(SREAL)
     # empty results array
     pred = np.ones((dims[0]*dims[1]), dtype=SREAL) * SREAL_FILL_VALUE
     # fill indices of predicted pixels with predicted value
-    pred[masks['acvi']] = prediction
+    #pred[masks['acvi']] = prediction
+    pred=prediction
 
     return pred
 
 
 def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                    ir108, ir120, ir134, lsm, skt, solzen, 
-                    undo_true_refl=False):
+                    ir108, ir120, ir134, lsm, skt, solzen, lat, lon,
+                    undo_true_refl=False, correct_vis_cal_nasa_to_impf=0):
     """
         Main function that calls the neural network for COT and
         CPH prediction.
 
         Input:
-        - vis006 (2d numpy array): SEVIRI VIS 0.6 um (Ch 1)
-        - vis008 (2d numpy array): SEVIRI VIS 0.8 um (Ch 2)
-        - nir016 (2d numpy array): SEVIRI NIR 1.6 um (Ch 3)
-        - ir039 (2d numpy array):  SEVIRI IR 3.9 um  (Ch 4)
-        - ir062 (2d numpy array):  SEVIRI WV 6.2 um  (Ch 5)
-        - ir073 (2d numpy array):  SEVIRI WV 7.3 um  (Ch 6)
-        - ir087 (2d numpy array):  SEVIRI IR 8.7 um  (Ch 7)
-        - ir108 (2d numpy array):  SEVIRI IR 10.8 um (Ch 9)
-        - ir120 (2d numpy array):  SEVIRI IR 12.0 um (Ch 10)
-        - ir134 (2d numpy array):  SEVIRI IR 13.4 um  (Ch 11)
-        - lsm (2d numpy array):    Land-sea mask
-        - skt (2d numpy array):    (ERA5) Skin Temperature
-        - variable (str):          String that seths the variable to be
-                                   predicted (COT, CPH)
+        - vis006 (2d numpy array):   SEVIRI VIS 0.6 um (Ch 1)
+        - vis008 (2d numpy array):   SEVIRI VIS 0.8 um (Ch 2)
+        - nir016 (2d numpy array):   SEVIRI NIR 1.6 um (Ch 3)
+        - ir039 (2d numpy array):    SEVIRI IR 3.9 um  (Ch 4)
+        - ir062 (2d numpy array):    SEVIRI WV 6.2 um  (Ch 5)
+        - ir073 (2d numpy array):    SEVIRI WV 7.3 um  (Ch 6)
+        - ir087 (2d numpy array):    SEVIRI IR 8.7 um  (Ch 7)
+        - ir108 (2d numpy array):    SEVIRI IR 10.8 um (Ch 9)
+        - ir120 (2d numpy array):    SEVIRI IR 12.0 um (Ch 10)
+        - ir134 (2d numpy array):    SEVIRI IR 13.4 um  (Ch 11)
+        - lsm (2d numpy array):      Land-sea mask
+        - skt (2d numpy array):      (ERA5) Skin Temperature
+        - solzen (2d numpy array):   Solar zenith angle
+        - lat (2d numpy array):      Latitude
+        - lon (2d numpy array):      Longitude
+        - undo_true_refl (bool):     Remove true reflectances
+                                     from VIS channels (* solzen)
+        - correct_vis_cal_nasa_to_impf (bool/str): 
+                                     Whether to apply linear correction
+                                     to convert NASA calibrated VIS
+                                     channel data to IMPF calibration.
+                                     0 (not applying) or 
+                                     [1, 2, 3, 4].
 
         Return:
-        - prediction (1d numpy array): NN output array in 1d
+        - prediction (list): NN output list 
+                             [CMA_reg, CMA_bin, CMA_unc, 
+                              CPH_reg, CPH_bin, CPH_unc]
     """
     start = time.time()
     # setup networks
@@ -371,8 +414,9 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     prepped = _prepare_input_arrays(vis006, vis008, nir016,
                                     ir039, ir062, ir073,
                                     ir087, ir108, ir120,
-                                    ir134, lsm, skt, solzen,
-                                    networks, undo_true_refl
+                                    ir134, lsm, skt, solzen, lat, lon,
+                                    networks, undo_true_refl,
+                                    correct_vis_cal_nasa_to_impf
                                     )
     (scaled_data, dims, input_is_2d, masks) = prepped
     t = time.time() - start

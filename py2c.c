@@ -23,7 +23,8 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                    void *ir120, void *ir134, void *lsm, void *skt,
                    void *solzen, int *nx, int *ny, float *reg_cot, 
                    char *bin_cot, float *unc_cot, float *reg_cph, 
-                   char *bin_cph, float *unc_cph)
+                   char *bin_cph, float *unc_cph, int *msg_index,
+                   bool *undo_true_reflectances)
 {
 	
     // initialize Python interpreter
@@ -42,8 +43,14 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
     npy_intp dims[2];
     dims[0] = *nx;
     dims[1] = *ny;
-
-    PyObject *undo_true_refl = Py_True;
+    
+    if (*undo_true_reflectances){
+        PyObject *undo_true_refl_py = Py_True;
+    } else {
+        PyObject *undo_true_refl_py = Py_False;
+    }
+    
+    PyObject *msg_index_py=msg_index;
 	
     PyObject *mName, *pModule, *pFunc, *args_var;
     PyObject *vis006py, *vis008py, *nir016py, *ir039py, *ir062py, *ir073py; 
@@ -90,7 +97,8 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
             // generate args tuple for function call
             args_var = PyTuple_Pack(14, vis006py, vis008py, nir016py, ir039py, 
                                     ir062py, ir073py, ir087py, ir108py, ir120py,
-                                    ir134py, lsmpy, sktpy, solzenpy, undo_true_refl);
+                                    ir134py, lsmpy, sktpy, solzenpy, undo_true_refl_py,
+                                    msg_index_py);
                
             // call python function for COT              
             res = PyObject_CallObject(pFunc, args_var);

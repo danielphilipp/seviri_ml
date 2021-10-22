@@ -32,11 +32,13 @@ module seviri_neural_net_m
                                  ir062, ir073, ir087, ir108, ir120, &
                                  ir134, lsm, skt, solzen, nx, ny, reg_cot, &
                                  bin_cot, unc_cot, reg_cph, bin_cph, &
-                                 unc_cph) bind(C, name="py_neural_net")
+                                 unc_cph, msg_index, &
+                                 undo_true_reflectances) bind(C, name="py_neural_net")
             import :: c_ptr
             import :: c_int
             import :: c_float
             import :: c_char
+            import :: c_bool
             type(c_ptr), value :: vis006
             type(c_ptr), value :: vis008
             type(c_ptr), value :: nir016
@@ -53,7 +55,8 @@ module seviri_neural_net_m
             real(c_float), dimension(*), intent(out) :: reg_cot, unc_cot, &
                                                         & reg_cph, unc_cph
             integer(c_char), dimension(*), intent(out) :: bin_cot, bin_cph
-            integer(c_int) :: nx, ny
+            integer(c_int) :: nx, ny, msg_index
+            logical(c_bool) :: undo_true_reflectances
         end subroutine py_neural_net
     end interface
 contains
@@ -96,7 +99,7 @@ contains
 subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
                         ir087, ir108, ir120, ir134, lsm, skt, solzen, regression_cot, &
                         binary_cot, uncertainty_cot, regression_cph, &
-                        binary_cph, uncertainty_cph)
+                        binary_cph, uncertainty_cph, msg_index, undo_true_reflectances)
     use iso_c_binding
     
     ! output arrays 
@@ -105,11 +108,12 @@ subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir07
     integer(c_char), intent(out) :: binary_cot(:,:), binary_cph(:,:)
 
     ! C-types
-    integer(c_int) :: nx ,ny
+    integer(c_int) :: nx ,ny, msg_index
     real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
                                                & ir062, ir073, ir087, ir108, &
                                                & ir120, ir134, skt, solzen
     integer(c_char), dimension(nx,ny), target :: lsm
+    logical(c_bool) :: undo_true_reflectances
   
     ! Call Python neural network via Python C-API
     call py_neural_net(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
@@ -117,7 +121,8 @@ subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir07
                        c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
                        c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
                        c_loc(solzen(1,1)), nx, ny, regression_cot, binary_cot, &
-                       uncertainty_cot, regression_cph, binary_cph, uncertainty_cph)
+                       uncertainty_cot, regression_cph, binary_cph, uncertainty_cph, &
+                       msg_index, undo_true_reflectances)
      
 end subroutine seviri_ann_cph_cot
 
