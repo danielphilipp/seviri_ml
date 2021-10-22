@@ -106,8 +106,12 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                                             nir016p, 
                                             correct_vis_cal_nasa_to_impf
                                             )    
-    else:
+    elif correct_vis_cal_casa_to_impf == 0:
         logging.info('Not correcting VIS channel calibration from NASA to IMPF.')
+    else:
+        logging.info('correct_vis_cal_nasa_to_impf value {} not known. However, ' \
+                     'not correcting VIS channel ' \
+                     'calibration from NASA to IMPF.'.format(correct_vis_cal_nasa_to_impf))
 
     vis006p[vis006p < 0] = 0
     vis008p[vis008p < 0] = 0
