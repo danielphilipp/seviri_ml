@@ -57,7 +57,7 @@ if backend == 'THEANO':
 
 
 def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                          ir108, ir120, ir134, lsm, skt, solzen, lat, lon, networks,
+                          ir108, ir120, ir134, lsm, skt, solzen, networks,
                           undo_true_refl, correct_vis_cal_nasa_to_impf):
     """
         Prepare input array for the neural network. Takes required feature
@@ -179,19 +179,11 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         msg = 'xdim or ydim differ between input arrays for neural network.'
         raise Exception(RuntimeError, msg)
 
-    # mask space pixels
-    if input_is_2d:
-        lat1d = lat.ravel()
-        lon1d = lon.ravel()
-    space = np.logical_or(np.logical_or(lat1d < -90, lat1d > 90),
-                          np.logical_or(lon1d < -180, lon1d > 180))
-
     # fill neural network input array with flattened data fields
     idata = np.empty((xdim*ydim, len(data_lst)))
 
     for cnt, d in enumerate(data_lst):
         tmp = d.ravel()
-        #tmp[space] = np.nan
         idata[:, cnt] = tmp
 
     # check for each pixel if any channels is invalid (1), else 0
@@ -366,7 +358,7 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
 
 
 def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                    ir108, ir120, ir134, lsm, skt, solzen, lat, lon,
+                    ir108, ir120, ir134, lsm, skt, solzen,
                     undo_true_refl=False, correct_vis_cal_nasa_to_impf=0):
     """
         Main function that calls the neural network for COT and
@@ -386,8 +378,6 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         - lsm (2d numpy array):      Land-sea mask
         - skt (2d numpy array):      (ERA5) Skin Temperature
         - solzen (2d numpy array):   Solar zenith angle
-        - lat (2d numpy array):      Latitude
-        - lon (2d numpy array):      Longitude
         - undo_true_refl (bool):     Remove true reflectances
                                      from VIS channels (* solzen)
         - correct_vis_cal_nasa_to_impf (bool/str): 
@@ -416,7 +406,7 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     prepped = _prepare_input_arrays(vis006, vis008, nir016,
                                     ir039, ir062, ir073,
                                     ir087, ir108, ir120,
-                                    ir134, lsm, skt, solzen, lat, lon,
+                                    ir134, lsm, skt, solzen,
                                     networks, undo_true_refl,
                                     correct_vis_cal_nasa_to_impf
                                     )
