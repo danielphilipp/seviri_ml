@@ -16,8 +16,9 @@ def _apply_correction(data, slope, intercept):
      return np.where(data > 0, data - lin_corr, data)
 
 
-def correct_nasa_impf(vis006, vis008, nir016, msg):
-    
+def correct_nasa_impf(vis006, vis008, nir016, msg_index):
+              
+    msg = 'MSG{:d}'.format(msg_index)
     params = PARAMETERS[msg]
 
     vis006 = _apply_correction(vis006, 
