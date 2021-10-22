@@ -16,7 +16,7 @@
 #include <Python.h>
 #include <stdlib.h>
 #include <arrayobject.h>
-
+#include <stdbool.h>
 
 void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039, 
                    void *ir062, void *ir073, void *ir087, void *ir108, 
