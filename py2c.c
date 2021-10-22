@@ -44,14 +44,17 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
     dims[0] = *nx;
     dims[1] = *ny;
     
+    PyObject *undo_true_refl_py;
+ 
     if (*undo_true_reflectances){
-        PyObject *undo_true_refl_py = Py_True;
+        undo_true_refl_py = Py_True;
     } else {
-        PyObject *undo_true_refl_py = Py_False;
+        undo_true_refl_py = Py_False;
     }
     
-    PyObject *msg_index_py=msg_index;
-	
+    PyObject *msg_index_py;
+    msg_index_py = msg_index;
+   
     PyObject *mName, *pModule, *pFunc, *args_var;
     PyObject *vis006py, *vis008py, *nir016py, *ir039py, *ir062py, *ir073py; 
     PyObject *ir087py, *ir108py, *ir120py, *ir134py, *lsmpy, *sktpy, *solzenpy;
