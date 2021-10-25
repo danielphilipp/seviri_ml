@@ -98,6 +98,8 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     vis008p = vis008.copy()
     nir016p = nir016.copy()
 
+    logging.info("CORRECTION FLAG: " + str(correct_vis_cal_nasa_to_impf))
+
     if correct_vis_cal_nasa_to_impf in [1, 2, 3, 4]:
         logging.info('Correcting VIS channel calibration from NASA to IMPF.')
         vis006p, vis008p, nir016p = correct_nasa_impf(
@@ -106,7 +108,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                                             nir016p, 
                                             correct_vis_cal_nasa_to_impf
                                             )    
-    elif correct_vis_cal_casa_to_impf == 0:
+    elif correct_vis_cal_nasa_to_impf == 0:
         logging.info('Not correcting VIS channel calibration from NASA to IMPF.')
     else:
         logging.info('correct_vis_cal_nasa_to_impf value {} not known. However, ' \
@@ -346,7 +348,7 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     # select scaled data for correct variable
     idata = scaled_data[variable]
     # predict only pixels indices where all channels are valid
-    #idata = idata[masks['acvi'], :]
+    idata = idata[masks['acvi'], :]
     # run prediction on valid pixels
     prediction = np.squeeze(model.predict(idata)).astype(SREAL)
     # empty results array
@@ -392,6 +394,7 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                              [CMA_reg, CMA_bin, CMA_unc, 
                               CPH_reg, CPH_bin, CPH_unc]
     """
+
     start = time.time()
     # setup networks
     networks = _select_networks(opts)

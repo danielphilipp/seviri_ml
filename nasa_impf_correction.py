@@ -12,17 +12,14 @@ PARAMETERS = {'MSG1': {'SLOPE': {'ch1': 0.85628,'ch2': 0.91591,'ch3': 1.05427},
 
 
 def _apply_correction(data, slope, intercept):
+     """  """
      lin_corr = data - (slope * data + intercept)
      return np.where(data > 0, data - lin_corr, data)
 
 
 def correct_nasa_impf(vis006, vis008, nir016, msg_index):
-              
-    msg = 'MSG{:d}'.format(msg_index)
+    """  """              
     params = PARAMETERS[msg]
-
-    print('NASA to IMPF: ', msg)
-    print('NASA to IMPF slope ch1: ', params['SLOPE']['ch1'])
 
     vis006 = _apply_correction(vis006, 
                                params['SLOPE']['ch1'],

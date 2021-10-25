@@ -23,7 +23,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                    void *ir120, void *ir134, void *lsm, void *skt,
                    void *solzen, int *nx, int *ny, float *reg_cot, 
                    char *bin_cot, float *unc_cot, float *reg_cph, 
-                   char *bin_cph, float *unc_cph, int *msg_index,
+                   char *bin_cph, float *unc_cph, char *msg_index,
                    bool *undo_true_reflectances)
 {
 	
@@ -36,25 +36,20 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
     {
             import_array(); 
     }
-    
-    //import_array();
-    
+     
     // declare Python Objects 
     npy_intp dims[2];
     dims[0] = *nx;
     dims[1] = *ny;
-    
-    PyObject *undo_true_refl_py;
- 
+
+    PyObject *undo_true_refl_py; 
     if (*undo_true_reflectances){
         undo_true_refl_py = Py_True;
     } else {
         undo_true_refl_py = Py_False;
     }
     
-    PyObject *msg_index_py;
-    msg_index_py = msg_index;
-   
+    PyObject *msg_index_py = Py_BuildValue("b", *msg_index); 
     PyObject *mName, *pModule, *pFunc, *args_var;
     PyObject *vis006py, *vis008py, *nir016py, *ir039py, *ir062py, *ir073py; 
     PyObject *ir087py, *ir108py, *ir120py, *ir134py, *lsmpy, *sktpy, *solzenpy;
@@ -98,7 +93,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
             PyArray_ENABLEFLAGS((PyArrayObject*) solzen, NPY_ARRAY_OWNDATA);
 
             // generate args tuple for function call
-            args_var = PyTuple_Pack(14, vis006py, vis008py, nir016py, ir039py, 
+            args_var = PyTuple_Pack(15, vis006py, vis008py, nir016py, ir039py, 
                                     ir062py, ir073py, ir087py, ir108py, ir120py,
                                     ir134py, lsmpy, sktpy, solzenpy, undo_true_refl_py,
                                     msg_index_py);
