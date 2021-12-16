@@ -1,6 +1,5 @@
 """ Helper functions for seviri neural networks"""
 
-import xarray as xr
 import logging
 import shutil
 import os
@@ -10,21 +9,6 @@ fmt = '%(levelname)s : %(filename)s : %(message)s'
 logging.basicConfig(level=logging.DEBUG,
                     format=fmt
                     )
-
-
-def save_output_netcdf(filepath, kwargs):
-    """
-        Save arrays to netcdf. kwargs is dict in the form
-        of {'variable_name': array, ...}. Array has to be
-        a 2d array with dimensions (xdim, ydim). Filepath
-        is path and filename to be saved.
-    """
-    ds = xr.Dataset()
-    for key, value in kwargs.items():
-        ds[key] = (('x', 'y'), value)
-
-    ds.to_netcdf(filepath)
-
 
 def all_same(items):
     """

@@ -342,7 +342,6 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     """ Run prediction with neural network. """
     # load correct model
     model = networks[variable].get_model()
-    logging.info('MODELGETTER')
     # select scaled data for correct variable
     idata = scaled_data[variable]
     # predict only pixels indices where all channels are valid

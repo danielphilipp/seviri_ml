@@ -50,7 +50,8 @@ class NetworkBase:
 
     def get_model(self):
         """ Load Tensorflow or Theano trained model (.h5 file) from disk. """
-
+        #import h5py
+        #logging.info('H5PY_FILE: {}'.format(h5py.__file__))
         if self.backend.lower() == 'tensorflow2':
             logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
             os.environ['KERAS_BACKEND'] = 'tensorflow'

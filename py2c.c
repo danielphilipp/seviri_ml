@@ -166,10 +166,9 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_DECREF(pModule);
         Py_DECREF(pFunc);
     } else {
-        //PyErr_Print();
+        PyErr_Print();
         fprintf(stderr, "Failed to load module\n");
     }
     // finalize Python interpreter
     Py_FinalizeEx(); 
-    fprintf(stdout, "C FINISHED\n");
 }

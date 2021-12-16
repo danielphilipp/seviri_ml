@@ -19,7 +19,7 @@ def _apply_correction(data, slope, intercept):
 
 def correct_nasa_impf(vis006, vis008, nir016, msg_index):
     """  """              
-    params = PARAMETERS[msg_index]
+    params = PARAMETERS['MSG'+str(msg_index)]
 
     vis006 = _apply_correction(vis006, 
                                params['SLOPE']['ch1'],
