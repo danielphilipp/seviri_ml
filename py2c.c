@@ -100,7 +100,6 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                
             // call python function for COT              
             res = PyObject_CallObject(pFunc, args_var);
-                             
             /* Function call returns list in  the form of:
              *  [COT_regression, COT_binary, COT_uncertainty,
              *   CPH_regression, CPH_binary, CPH_uncertainty] */
@@ -111,7 +110,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                 for (int i=0; i < *nx; i++){
                     for (int j=0; j < *ny; j++){
                             
-                        idx = i * *nx + j;
+                        idx = i * *ny + j;
 
                         reg_cot[idx] = *(float *) PyArray_GETPTR2((PyArrayObject *)PyList_GetItem(res, 0),
                                                                   (npy_int)i, (npy_int)j);
@@ -132,7 +131,6 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                                                                   (npy_int)i, (npy_int)j);
                     }
 			    }
-               
                 // decrement reference counter of this objects
                 Py_DECREF(res);
                 //Py_DECREF(tmp_var);
@@ -156,6 +154,7 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
                 Py_DECREF(sktpy);
                 Py_DECREF(solzen);
                 PyErr_Print();
+                
                 fprintf(stderr, "Call failed\n");
             }
         } else{
@@ -167,9 +166,10 @@ void py_neural_net(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_DECREF(pModule);
         Py_DECREF(pFunc);
     } else {
-        PyErr_Print();
+        //PyErr_Print();
         fprintf(stderr, "Failed to load module\n");
     }
     // finalize Python interpreter
     Py_FinalizeEx(); 
+    fprintf(stdout, "C FINISHED\n");
 }

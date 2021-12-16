@@ -98,8 +98,6 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     vis008p = vis008.copy()
     nir016p = nir016.copy()
 
-    logging.info("CORRECTION FLAG: " + str(correct_vis_cal_nasa_to_impf))
-
     if correct_vis_cal_nasa_to_impf in [1, 2, 3, 4]:
         logging.info('Correcting VIS channel calibration from NASA to IMPF.')
         vis006p, vis008p, nir016p = correct_nasa_impf(
@@ -344,7 +342,7 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     """ Run prediction with neural network. """
     # load correct model
     model = networks[variable].get_model()
-
+    logging.info('MODELGETTER')
     # select scaled data for correct variable
     idata = scaled_data[variable]
     # predict only pixels indices where all channels are valid
@@ -450,5 +448,5 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
 
     results = [results_COT['reg'], results_COT['bin'], results_COT['unc'],
                results_CPH['reg'], results_CPH['bin'], results_CPH['unc']]
-
+    
     return results
