@@ -1,6 +1,6 @@
 """
-    This module contains functions to do neural network COT (CMA) and CPH
-    predictions based on SEVIRI measurements.
+    This module contains functions to do neural network CTP predictions
+    based on SEVIRI measurements.
 
     - func _all_same(): Helper function. Checks whether all elements in a
                       list are equal.
@@ -9,15 +9,7 @@
     - func getdata_dummy(): For DWD Servers. Load collocated dummy test data.
     - func predict_ANN(): To be called to execute the prediction.
 
-    First author: Daniel Philipp (DWD)
-    ---------------------------------------------------------------------------
-    2020/07/20, DP: Initial version
-    2020/07/23, DP: Added a neural network driver file containing the
-                    backend, paths and thresholds
-    2020/08/13, DP: Added masking of invalid (space) pixels before prediction.
-                    Only valid pixels are predicted to increase efficiency.
-                    Implemented correct fill value usage.
-    2020/08/18, DP: Implemented fully working uncertainty estimation.
+    Author: Daniel Philipp (DWD)
 """
 
 import neuralnet
@@ -26,8 +18,7 @@ import time
 import os
 import logging
 import helperfuncs as hf
-from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
-                         BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE)
+from definitions import SREAL_FILL_VALUE, SREAL, IS_CLEAR
 from nasa_impf_correction import correct_nasa_impf
 
 
@@ -42,8 +33,8 @@ if backend is not None:
 else:
     # default behaviour
     backend = 'TENSORFLOW2'
-    logging.info('SEVIRI_ML_BACKEND env variable not defined. '
-                 'Setting backend to default {}'.format(backend))
+    logging.info('SEVIRI_ML_BACKEND env variable not '
+                 'defined. Setting backend to default {}'.format(backend))
 
 if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
     backend = 'TENSORFLOW2'
@@ -63,7 +54,8 @@ if backend == 'THEANO':
 def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                           ir108, ir120, ir134, lsm, skt, solzen, satzen,
                           networks, undo_true_refl,
-                          correct_vis_cal_nasa_to_impf, model_version):
+                          correct_vis_cal_nasa_to_impf,
+                          model_version):
     """
         Prepare input array for the neural network. Takes required feature
         arrays, flattens them using row-major ordering and combines all flat
@@ -107,17 +99,17 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
 
     if correct_vis_cal_nasa_to_impf in [1, 2, 3, 4]:
         logging.info('Correcting VIS calibration from NASA to '
-                     'IMPF for MSG{:d}.'.format(correct_vis_cal_nasa_to_impf))
+                     'IMPF for MSG{:d}'.format(correct_vis_cal_nasa_to_impf))
         c = correct_nasa_impf(vis006, vis008p, nir016p,
                               correct_vis_cal_nasa_to_impf)
         vis006p, vis008p, nir016p = c
 
     elif correct_vis_cal_nasa_to_impf == 0:
-        logging.info('Not correcting VIS channel calibration '
-                     'from NASA to IMPF.')
+        logging.info('Not correcting VIS calibration from NASA to IMPF.')
     else:
-        logging.info('correct_vis_cal_nasa_to_impf value {} not known.'
-                     'However, not correcting VIS calibration from NASA to '
+        logging.info('correct_vis_cal_nasa_to_impf value {} '
+                     'not known. However, not correcting VIS channel '
+                     'calibration from NASA to '
                      'IMPF.'.format(correct_vis_cal_nasa_to_impf))
 
     vis006p[vis006p < 0] = 0
@@ -146,25 +138,7 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     ir087_108 = ir087 - ir108
     ir108_120 = ir108 - ir120
 
-    if model_version in [1, 2]:
-        # list of arrays must be kept in this order!
-        data_lst = [
-                    ir039,      # 1
-                    ir087,      # 2
-                    ir087_108,  # 3
-                    ir108,      # 4
-                    ir108_120,  # 5
-                    ir120,      # 6
-                    ir134,      # 7
-                    lsm,        # 8
-                    nir016p,    # 9
-                    skt,        # 10
-                    vis006p,    # 11
-                    vis008p,    # 12
-                    ir062,      # 13
-                    ir073       # 14
-                    ]
-    elif model_version == 3:
+    if model_version == 3:
         # list of arrays must be kept in this order!
         data_lst = [
                     ir039,      # 1
@@ -186,8 +160,8 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                     ]
     else:
         raise Exception(RuntimeError,
-                        'Model version {} invalid. '
-                        'Allowed are 1, 2 and 3.'.format(model_version))
+                        'Model version {} invalid.'
+                        'Allowed is 3.'.format(model_version))
 
     # check if array dimensions are equal throughout all arrays
     # if all dimensions are equal: set dimension constants for reshaping
@@ -236,112 +210,22 @@ def _prepare_input_arrays(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
              'aci': all_channels_invalid,
              'acvi': all_channels_valid_indxs[0]}
 
-    scaled_data = {'COT': networks['COT'].scale_input(idata),
-                   'CPH': networks['CPH'].scale_input(idata)}
+    scaled_data = {'CTP': networks['CTP'].scale_input(idata)}
 
     # apply scaling to input array
     return scaled_data, (xdim, ydim), input_is_2d, masks
 
 
-def _select_networks(opts):
+def _select_network(opts):
     """ Setup configured networks """
-
-    networks = {'COT': neuralnet.NetworkCOT(opts),
-                'CPH': neuralnet.NetworkCPH(opts)}
-    return networks
-
-
-def _thresholding(prediction, variable, opts):
-    """ Determine binary array by applying thresholding. """
-    # read threshold from driver file content
-    if variable == 'CPH':
-        threshold = opts.NN_CPH_THRESHOLD
-    elif variable == 'COT':
-        threshold = opts.NN_COT_THRESHOLD
-
-    # appply threshold
-    if variable == 'COT':
-        binary = np.where(prediction > threshold, IS_CLOUD, IS_CLEAR)
-    elif variable == 'CPH':
-        binary = np.where(prediction > threshold, IS_ICE, IS_WATER)
-
-    # mask pixels where regression array has fill value
-    binary[prediction == SREAL_FILL_VALUE] = BYTE_FILL_VALUE
-
-    return binary
-
-
-def _unc_approx_1(pred, th, unc_params):
-    """ Calculate uncertainty for cloudy/ice pixels. """
-    norm_diff = (pred-th) / (th - 1)
-
-    minunc = unc_params['min1']
-    maxunc = unc_params['max1']
-
-    return (maxunc - minunc) * norm_diff + maxunc
-
-
-def _unc_approx_0(pred, th, unc_params):
-    """ Calculate uncertainty for clear/water pixels """
-    norm_diff = (pred-th) / th
-
-    minunc = unc_params['min0']
-    maxunc = unc_params['max0']
-
-    return (maxunc - minunc) * norm_diff + maxunc
-
-
-def _uncertainty(prediction, binary, variable, opts):
-    """ Calculate CMA/CPH uncertainy. """
-
-    if variable == 'CPH':
-        threshold = opts.NN_CPH_THRESHOLD
-    elif variable == 'COT':
-        threshold = opts.NN_COT_THRESHOLD
-
-    if variable == 'COT':
-        unc_params = {'min1': opts.UNC_CLD_MIN,
-                      'max1': opts.UNC_CLD_MAX,
-                      'min0': opts.UNC_CLR_MIN,
-                      'max0': opts.UNC_CLR_MAX
-                      }
-
-        unc = np.where(binary > IS_CLEAR,
-                       _unc_approx_1(prediction,
-                                     threshold,
-                                     unc_params
-                                     ),  # where cloudy
-                       _unc_approx_0(prediction,
-                                     threshold,
-                                     unc_params
-                                     )  # where clear
-                       )
-    elif variable == 'CPH':
-        unc_params = {'min1': opts.UNC_ICE_MIN,
-                      'max1': opts.UNC_ICE_MAX,
-                      'min0': opts.UNC_WAT_MIN,
-                      'max0': opts.UNC_WAT_MAX
-                      }
-
-        unc = np.where(binary > IS_WATER,
-                       _unc_approx_1(prediction,
-                                     threshold,
-                                     unc_params
-                                     ),  # where water
-                       _unc_approx_0(prediction,
-                                     threshold,
-                                     unc_params
-                                     )  # where ice
-                       )
-
-    return unc
+    return {'CTP': neuralnet.NetworkCTP(opts)}
 
 
 def _check_prediction(prediction, parameters, masks):
     """ Check neural net regression for invalid values. """
     # mask prediction values outside valid regression limits
-    condition = np.logical_or(prediction > parameters.VALID_NOR_REGRESSION_MAX,
-                              prediction < parameters.VALID_NOR_REGRESSION_MIN
+    condition = np.logical_or(prediction > parameters.VALID_CTP_REGRESSION_MAX,
+                              prediction < parameters.VALID_CTP_REGRESSION_MIN
                               )
     prediction = np.where(condition, SREAL_FILL_VALUE, prediction)
 
@@ -350,42 +234,69 @@ def _check_prediction(prediction, parameters, masks):
     return prediction
 
 
-def _postproc_prediction(prediction, variable, parameters, masks):
-    """ Check invalid predictions, apply thresholding and get uncertainty. """
+def _uncertainty(models, input, median, variable, dims,
+                 masks, parameters, input_is_2d, method):
+    """ Get CTP uncertainty. Until yet, only Quantile
+        Regression is implemented.
+    """
+    # quantile regression.
+    if method.lower() in ['percentile', 'quantile', 'qrm']:
+        # select scaled data for correct variable
+        idata = input[variable]
+        # predict only pixels indices where all channels are valid
+        idata = idata[masks['acvi'], :]
+
+        # run lower and upper percentile prediction on valid pixels
+        prediction_lower = np.squeeze(models['lower'].predict(idata))
+        prediction_upper = np.squeeze(models['upper'].predict(idata))
+        prediction_lower = prediction_lower.astype(SREAL)
+        prediction_upper = prediction_upper.astype(SREAL)
+
+        # empty results array
+        p_lower = np.ones((dims[0] * dims[1]), dtype=SREAL) * SREAL_FILL_VALUE
+        p_upper = np.ones((dims[0] * dims[1]), dtype=SREAL) * SREAL_FILL_VALUE
+        # fill indices of predicted pixels with predicted values
+        p_lower[masks['acvi']] = prediction_lower
+        p_upper[masks['acvi']] = prediction_upper
+
+        if input_is_2d:
+            p_lower = p_lower.reshape((dims[0], dims[1]))
+            p_upper = p_upper.reshape((dims[0], dims[1]))
+
+        # mask invalid pixels and set correct fill values
+        p_lower = _postproc_prediction(p_lower, parameters, masks)
+        p_upper = _postproc_prediction(p_upper, parameters, masks)
+
+        # as the 1 sigma lower/upper interval is not symmetric
+        # we take the mean of upper and lower
+        lower_sigma = np.abs(p_lower - median)
+        upper_sigma = np.abs(p_upper - median)
+        mean_sigma = 0.5 * (lower_sigma + upper_sigma)
+        return mean_sigma
+    else:
+        raise Exception('No uncertainty method except prcentile '
+                        'regression implemented yet. '
+                        'Set CTP_UNCERTAINTY_METHOD to '
+                        'Percentile in the nn_driver.txt')
+
+
+def _postproc_prediction(prediction, parameters, masks):
+    """ Check invalid predictions and get uncertainty. """
     # regression
     reg = _check_prediction(prediction, parameters, masks)
-    # binary cloud flag
-    binary = _thresholding(prediction, variable, parameters)
-    # uncertainty
-    unc = _uncertainty(prediction, binary, variable, parameters)
-
-    # penalize cases where at least 1 input variable is invalid with higher unc
-    unc = np.where(masks['hii'] == 1, unc * 1.1, unc)
-    # mask cases where all channels are invalid
-    binary = np.where(masks['aci'] == 1, BYTE_FILL_VALUE, binary)
-    unc = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, unc)
-
     reg = np.where(~np.isfinite(reg), SREAL_FILL_VALUE, reg)
-    binary = np.where(~np.isfinite(binary), BYTE_FILL_VALUE, binary)
-    unc = np.where(~np.isfinite(unc), SREAL_FILL_VALUE, unc)
-
-    res = {'reg': reg.astype(SREAL),
-           'bin': binary.astype(BYTE),
-           'unc': unc.astype(SREAL)}
-
-    return res
+    return reg
 
 
-def _run_prediction(variable, networks, scaled_data, masks, dims):
+def _run_prediction(variable, models, scaled_data, masks, dims):
     """ Run prediction with neural network. """
-    # load correct model
-    model = networks[variable].get_model()
+
     # select scaled data for correct variable
     idata = scaled_data[variable]
     # predict only pixels indices where all channels are valid
     idata = idata[masks['acvi'], :]
     # run prediction on valid pixels
-    prediction = np.squeeze(model.predict(idata)).astype(SREAL)
+    prediction = np.squeeze(models['median'].predict(idata)).astype(SREAL)
     # empty results array
     pred = np.ones((dims[0]*dims[1]), dtype=SREAL) * SREAL_FILL_VALUE
     # fill indices of predicted pixels with predicted value
@@ -394,12 +305,12 @@ def _run_prediction(variable, networks, scaled_data, masks, dims):
     return pred
 
 
-def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                    ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
-                    undo_true_refl=False, correct_vis_cal_nasa_to_impf=0):
+def predict_CTP(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
+                ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
+                undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
+                cldmask=None):
     """
-        Main function that calls the neural network for COT and
-        CPH prediction.
+        Main function that calls the neural network for CTP prediction.
 
         Input:
         - vis006 (2d numpy array):   SEVIRI VIS 0.6 um (Ch 1)
@@ -423,6 +334,7 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                                      channel data to IMPF calibration.
                                      0 (not applying) or
                                      [1, 2, 3, 4].
+        - cldmask (2d numpy array or None): External cloud mask.
 
         Return:
         - prediction (list): NN output list
@@ -433,17 +345,15 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     logging.info('---------- RUNNING CMA/CPH ANN ----------')
 
     # setup networks
-    networks = _select_networks(opts)
+    networks = _select_network(opts)
+
+    v = 'CTP'
 
     # check if model versions of COT and CPH are equal
-    cot_model_version = networks['COT'].version
-    cph_model_version = networks['CPH'].version
-    assert cot_model_version == cph_model_version
-    model_version = cot_model_version
+    model_version = networks[v].version
 
-    # get parameters such as uncertainty characterization
-    # and thresholds corresponding to variable and version
-    parameters = hf.get_parameters(model_version, 'CPHCOT')
+    # get parameters corresponding to variable and model version
+    parameters = hf.get_parameters(model_version, v)
 
     # check if solzen is available if true refl should be removed
     if undo_true_refl:
@@ -471,42 +381,39 @@ def predict_CPH_COT(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                                     ir134, lsm, skt, solzen, satzen,
                                     networks, undo_true_refl,
                                     correct_vis_cal_nasa_to_impf,
-                                    model_version
-                                    )
+                                    model_version)
     (scaled_data, dims, input_is_2d, masks) = prepped
 
-    # predict COT
-    v = 'COT'
+    # load correct models (lower percentile, median, upper percentile)
+    models = networks[v].get_model()
+
+    # predict CTP
     start = time.time()
-    pred = _run_prediction(v, networks, scaled_data, masks, dims)
-    if input_is_2d:
-        pred = pred.reshape((dims[0], dims[1]))
-    results_COT = _postproc_prediction(pred,
-                                       v,
-                                       parameters,
-                                       masks)
-    logging.info("Time for prediction COT: {:.3f}".format(time.time() - start))
+    prediction = _run_prediction(v, models, scaled_data, masks, dims)
+    logging.info("Time for prediction CTP: {:.3f}".format(time.time() - start))
 
-    # predict CPH
-    v = 'CPH'
+    if input_is_2d:
+        prediction = prediction.reshape((dims[0], dims[1]))
+    prediction = _postproc_prediction(prediction, parameters, masks)
+
+    # get uncertainty
     start = time.time()
-    pred = _run_prediction(v, networks, scaled_data, masks, dims)
-    if input_is_2d:
-        pred = pred.reshape((dims[0], dims[1]))
-    results_CPH = _postproc_prediction(pred,
-                                       v,
-                                       parameters,
-                                       masks)
-    logging.info("Time for prediction CPH: {:.3f}".format(time.time() - start))
+    uncertainty = _uncertainty(models, scaled_data, prediction, v,
+                               dims, masks, parameters, input_is_2d,
+                               opts['CTP_UNCERTAINTY_METHOD'])
+    logging.info('Time for calculating uncertainty: '
+                 '{:.3f}'.format(time.time() - start))
 
-    # mask CPH pixels where binary CMA is clear (0)
-    clear_mask = (results_COT['bin'] == IS_CLEAR)
+    results = {}
+    results['reg'] = prediction
+    results['unc'] = uncertainty
 
-    results_CPH['reg'][clear_mask] = SREAL_FILL_VALUE
-    results_CPH['bin'][clear_mask] = IS_CLEAR
-    results_CPH['unc'][clear_mask] = SREAL_FILL_VALUE
+    # optional: mask clear sky pixels with extermal cloudmask
+    if cldmask is not None:
+        logging.info('Applying external cldmask to CTP')
+        # mask CTP pixels where binary CMA is clear (0)
+        clear_mask = cldmask == IS_CLEAR
+        results['reg'][clear_mask] = SREAL_FILL_VALUE
+        results['unc'][clear_mask] = SREAL_FILL_VALUE
 
-    results = [results_COT['reg'], results_COT['bin'], results_COT['unc'],
-               results_CPH['reg'], results_CPH['bin'], results_CPH['unc']]
-
-    return results
+    return [results['reg'], results['unc']]

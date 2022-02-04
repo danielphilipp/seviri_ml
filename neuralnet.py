@@ -6,6 +6,7 @@
     - class NetworkBase: Basic parent class for NetworkCPH and NetworkCOT
     - class NetworkCPH(NetworkBase): Class for CPH prediction
     - class NetworkCOT(NetworkBase): Class for COT prediction
+    - class NetworkCTP(NetworkBase): Class for CTP prediction
 
     First author: Daniel Philipp (DWD)
     ---------------------------------------------------------------------------
@@ -45,13 +46,9 @@ class NetworkBase:
         self.scalerpath = scalerpath
         self.backend = backend
 
-        logging.info('Modelpath SEVIRI ANN: {}'.format(modelpath))
-        logging.info('Scalerpath SEVIRI ANN: {}'.format(scalerpath))
-
     def get_model(self):
         """ Load Tensorflow or Theano trained model (.h5 file) from disk. """
-        #import h5py
-        #logging.info('H5PY_FILE: {}'.format(h5py.__file__))
+
         if self.backend.lower() == 'tensorflow2':
             logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
             os.environ['KERAS_BACKEND'] = 'tensorflow'
@@ -68,7 +65,18 @@ class NetworkBase:
         else:
             _throw_backend_not_found_error(self.backend)
 
-        return load_model(self.modelpath, compile=False)
+        # for CTP we need 3 models to get uncertainty
+        if isinstance(self.modelpath, list):
+            models = dict()
+            names = ['lower', 'median', 'upper']
+            for m, n in zip(self.modelpath, names):
+                models[n] = load_model(m, compile=False)
+            return models
+        # for CMA and CPH we need ony one model
+        elif isinstance(self.modelpath, str):
+            return load_model(self.modelpath, compile=False)
+        else:
+            raise Exception('modelpath must be list or string.')
 
     def _get_scaler(self):
         """ Load sklearn.preprocessing scaler from disk (.pkl file). """
@@ -88,7 +96,9 @@ class NetworkCPH(NetworkBase):
         modelpath = opts['CPH_MODEL_FILEPATH']
         scalerpath = opts['CPH_SCALER_FILEPATH']
         backend = opts['BACKEND']
-        
+
+        self.version = opts['CPH_MODEL_VERSION']
+
         if backend == 'THEANO':
             hf.check_theano_version(modelpath)
         else:
@@ -99,12 +109,12 @@ class NetworkCPH(NetworkBase):
 
 class NetworkCOT(NetworkBase):
     def __init__(self, opts):
-
         self.opts = opts
-
         modelpath = opts['COT_MODEL_FILEPATH']
         scalerpath = opts['COT_SCALER_FILEPATH']
         backend = opts['BACKEND']
+
+        self.version = opts['COT_MODEL_VERSION']
 
         if backend == 'THEANO':
             hf.check_theano_version(modelpath)
@@ -112,3 +122,24 @@ class NetworkCOT(NetworkBase):
             hf.check_tensorflow_version(modelpath)
 
         super().__init__(modelpath, scalerpath, backend)
+
+
+class NetworkCTP(NetworkBase):
+    def __init__(self, opts):
+
+        self.opts = opts
+
+        modelpaths = [opts['CTP_LOWER_MODEL_FILEPATH'],
+                      opts['CTP_MEDIAN_MODEL_FILEPATH'],
+                      opts['CTP_UPPER_MODEL_FILEPATH']]
+        scalerpath = opts['CTP_SCALER_FILEPATH']
+        backend = opts['BACKEND']
+
+        self.version = opts['CTP_MODEL_VERSION']
+
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpaths[1])
+        else:
+            hf.check_tensorflow_version(modelpaths[1])
+
+        super().__init__(modelpaths, scalerpath, backend)

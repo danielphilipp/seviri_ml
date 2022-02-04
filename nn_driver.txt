@@ -5,14 +5,11 @@
 DATA_PATH = None
 
 ##############################################################################
-####### MODIFY IF YOUR MODEL AND SCALING FILES ARE NOT THE DEFAULT ONES ######
+###################### MODIFY IF YOUR MODEL VERSION ##########################
 ##############################################################################
-#FILENAMES OF SCALING/MODEL FILES. KEEP NONE IF YOU WANT TO USE THE PROVIDED
-#ONES.
-COT_MODEL_FILENAME = None
-CPH_MODEL_FILENAME = None
-COT_SCALER_FILENAME = None
-CPH_SCALER_FILENAME = None
+COT_MODEL_VERSION = 3
+CPH_MODEL_VERSION = 3
+CTP_MODEL_VERSION = 3
 
 ###############################################################################
 ######## ONLY READ IF ENVIRONMENT VARIABLE SEVIRI_ML_BACKEND IS THEANO ########
@@ -35,25 +32,6 @@ USE_THEANO_COMPILEDIR_LOCK = True
 USE_PID_COMPILEDIR = False
 
 ################################################################################
-############## ONLY CHANGE IF YOU KNOW WHAT YOU ARE DOING ######################
+#################### SWITCHES CONTROLLING CTP UNCERTAINTY ######################
 ################################################################################
-# THRESHOLDS TO CONVERT REGRESSION => BINARY 
-NN_COT_THRESHOLD          = 0.12
-NN_CPH_THRESHOLD          = 0.50
-
-# REGRESSION VALUE LIMITS
-VALID_REGRESSION_MAX   = 1.0
-VALID_REGRESSION_MIN   = 0.0
-
-# UNCERTAINTY CHARACTERIZATION
-UNC_CLD_MIN      = 0.00000
-UNC_CLD_MAX      = 44.9588
-
-UNC_CLR_MIN      = 12.6330
-UNC_CLR_MAX      = 50.3358
-
-UNC_WAT_MIN      = 1.82666
-UNC_WAT_MAX      = 50.1769
-
-UNC_ICE_MIN      = 2.19471
-UNC_ICE_MAX      = 50.7718
+CTP_UNCERTAINTY_METHOD = Quantile

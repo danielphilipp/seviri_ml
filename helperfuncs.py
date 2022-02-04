@@ -4,11 +4,35 @@ import logging
 import shutil
 import os
 import readdriver
+from definitions import CMACPHVersion2Constants
+from definitions import CMACPHVersion3Constants
+from definitions import CTPVersion3Constants
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
 logging.basicConfig(level=logging.DEBUG,
                     format=fmt
                     )
+
+
+def get_parameters(version, variable):
+    if variable == 'CPHCOT':
+        if version == 2:
+            logging.info('Loading version 2 constants')
+            return CMACPHVersion2Constants()
+        elif version == 3:
+            logging.info('Loading version 3 constants')
+            return CMACPHVersion3Constants()
+        else:
+            raise Exception('No constants defined for version '
+                            '{}'.format(version))
+    elif variable == 'CTP':
+        if version == 3:
+            logging.info('Loading version 3 constants')
+            return CTPVersion3Constants()
+        else:
+            raise Exception('No constants defined for version '
+                            '{}'.format(version))
+
 
 def all_same(items):
     """
@@ -34,7 +58,6 @@ def _get_driver_opts(backend):
     ptf = os.path.join(basepath, drifile)
     if not os.path.isfile(ptf):
         raise Exception('Driver file {} does not exist'.format(ptf))
-    logging.info("SEVIRI ANN DRIVER: {}".format(ptf))
     return readdriver.parse_nn_driver(ptf, backend)
 
 
@@ -53,6 +76,7 @@ def check_theano_version(modelpath):
         msg = msg.format(cot_version, curr_version)
         logging.warning(msg)
 
+
 def check_tensorflow_version(modelpath):
     """
     Check if installed Tensorflow version matches the
@@ -69,7 +93,6 @@ def check_tensorflow_version(modelpath):
         logging.warning(msg)
 
 
-
 class ConfigTheano:
     def __init__(self, opts):
         self.use_pid_compiledir = opts['USE_PID_COMPILEDIR']
@@ -83,7 +106,7 @@ class ConfigTheano:
         # creates new compile_directory
         if self.use_pid_compiledir:
             self._set_pid_compiledir()
-    
+
         # enable or disable compile directory locking
         if not self.use_compiledir_lock:
             import theano

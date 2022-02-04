@@ -4,9 +4,8 @@ import os
 import pathlib
 from definitions import MANDATORY_OPTS
 from definitions import TRUE_OPTS, FALSE_OPTS
-from definitions import DEFAULT_THEANO_MODEL_COT, DEFAULT_THEANO_MODEL_CPH
-from definitions import DEFAULT_TF2_MODEL_COT, DEFAULT_TF2_MODEL_CPH
-from definitions import DEFAULT_SCALER_CPH, DEFAULT_SCALER_COT
+from definitions import ModelSetupCOT, ModelSetupCPH, ModelSetupCTP
+
 
 def _set_default_filepath():
     ptf = pathlib.Path(__file__).parent.absolute()
@@ -27,63 +26,14 @@ def _check_parsed_opts(opts):
                 opts[opt] = _set_default_filepath()
 
             if not os.path.isdir(opts[opt]):
-                raise Exception('DATA_PATH {} does not exist'.format(opts[opt]))
-
-        if opt == 'COT_MODEL_FILENAME':
-            fp_opt = 'COT_MODEL_FILEPATH'
-            if opts[opt].upper() == 'NONE':
-                if opts['BACKEND'] == 'THEANO':
-                    opts[fp_opt] = os.path.join(opts['DATA_PATH'], 
-                                                DEFAULT_THEANO_MODEL_COT)
-                else:
-                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                                DEFAULT_TF2_MODEL_COT)
-            else:
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            opts[opt] )
-
-            if not os.path.isfile(opts[fp_opt]):
-                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
-
-        if opt == 'CPH_MODEL_FILENAME':
-            fp_opt = 'CPH_MODEL_FILEPATH'
-            if opts[opt].upper() == 'NONE':
-                if opts['BACKEND'] == 'THEANO':
-                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                                DEFAULT_THEANO_MODEL_CPH)
-                else:
-                    opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                                DEFAULT_TF2_MODEL_CPH)
-            else:
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            opts[opt])
-            if not os.path.isfile(opts[fp_opt]):
-                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
-
-        if opt == 'CPH_SCALER_FILENAME':
-            fp_opt = 'CPH_SCALER_FILEPATH'
-            if opts[opt].upper() == 'NONE':
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            DEFAULT_SCALER_CPH)
-            else:
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            opts[opt])
-            if not os.path.isfile(opts[fp_opt]):
-                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
-
-        if opt == 'COT_SCALER_FILENAME':
-            fp_opt = 'COT_SCALER_FILEPATH'
-            if opts[opt].upper() == 'NONE':
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            DEFAULT_SCALER_COT)
-            else:
-                opts[fp_opt] = os.path.join(opts['DATA_PATH'],
-                                            opts[opt])
-            if not os.path.isfile(opts[fp_opt]):
-                raise Exception('{} {} does not exist'.format(fp_opt, opts[fp_opt]))
+                raise Exception('DATA_PATH {} does '
+                                'not exist'.format(opts[opt]))
 
         if filetype == 'FLOAT':
             opts[opt] = float(opts[opt])
+
+        if filetype == 'INT':
+            opts[opt] = int(opts[opt])
 
         if filetype == 'BOOL':
             if opts[opt] in TRUE_OPTS:
@@ -125,6 +75,33 @@ def parse_nn_driver(driver_path, backend):
                     raise Exception(RuntimeError, msg.format(len(args)))
 
                 opts[args[0]] = args[1]
-    
+
     opts['BACKEND'] = backend
-    return _check_parsed_opts(opts)
+
+    opts = _check_parsed_opts(opts)
+
+    # select model and scaler depending on version and backend
+    cot_setup = ModelSetupCOT(opts['COT_MODEL_VERSION'],
+                              opts['BACKEND'],
+                              opts['DATA_PATH'])
+    cot_setup.set_models_scalers()
+    cph_setup = ModelSetupCPH(opts['CPH_MODEL_VERSION'],
+                              opts['BACKEND'],
+                              opts['DATA_PATH'])
+    cph_setup.set_models_scalers()
+    ctp_setup = ModelSetupCTP(opts['CTP_MODEL_VERSION'],
+                              opts['BACKEND'],
+                              opts['DATA_PATH'])
+    ctp_setup.set_models_scalers()
+
+    # set models to be used in options dictionary
+    opts['COT_MODEL_FILEPATH'] = cot_setup.model_filepath
+    opts['COT_SCALER_FILEPATH'] = cot_setup.scaler_filepath
+    opts['CPH_MODEL_FILEPATH'] = cph_setup.model_filepath
+    opts['CPH_SCALER_FILEPATH'] = cph_setup.scaler_filepath
+    opts['CTP_LOWER_MODEL_FILEPATH'] = ctp_setup.model_lower_filepath
+    opts['CTP_UPPER_MODEL_FILEPATH'] = ctp_setup.model_upper_filepath
+    opts['CTP_MEDIAN_MODEL_FILEPATH'] = ctp_setup.model_median_filepath
+    opts['CTP_SCALER_FILEPATH'] = ctp_setup.scaler_filepath
+
+    return opts
