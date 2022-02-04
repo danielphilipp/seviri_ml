@@ -342,7 +342,7 @@ def predict_CTP(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                               CPH_reg, CPH_bin, CPH_unc]
     """
 
-    logging.info('---------- RUNNING CMA/CPH ANN ----------')
+    logging.info('---------- RUNNING CTP ANN ----------')
 
     # setup networks
     networks = _select_network(opts)
