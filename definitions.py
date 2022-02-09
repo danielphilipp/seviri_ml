@@ -41,15 +41,15 @@ MANDATORY_OPTS = {'DATA_PATH': 'PATH',
 class CMACPHVersion1Constants:
     def __init__(self):
         # uncertainty parameters
-        self.INTERCEPT_LIQ = 50.18
-        self.INTERCEPT_ICE = 50.77
-        self.INTERCEPT_CLR = 50.34
-        self.INTERCEPT_CLD = 44.96
+        self.UNC_INTERCEPT_LIQ = 50.18
+        self.UNC_INTERCEPT_ICE = 50.77
+        self.UNC_INTERCEPT_CLR = 50.34
+        self.UNC_INTERCEPT_CLD = 44.96
 
-        self.SLOPE_LIQ = 48.35
-        self.SLOPE_ICE = -48.58
-        self.SLOPE_CLR = 37.70
-        self.SLOPE_CLD = -47.26
+        self.UNC_SLOPE_LIQ = 48.35
+        self.UNC_SLOPE_ICE = -48.58
+        self.UNC_SLOPE_CLR = 37.70
+        self.UNC_SLOPE_CLD = -47.26
 
         # COT threshold
         self.NN_COT_THRESHOLD = 0.12
