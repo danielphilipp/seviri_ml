@@ -4,6 +4,7 @@ import logging
 import shutil
 import os
 import readdriver
+from definitions import CMACPHVersion1Constants
 from definitions import CMACPHVersion2Constants
 from definitions import CMACPHVersion3Constants
 from definitions import CTPVersion3Constants
@@ -16,6 +17,9 @@ logging.basicConfig(level=logging.DEBUG,
 
 def get_parameters(version, variable):
     if variable == 'CPHCOT':
+        if version == 1:
+            logging.info('Loading version 1 constants')
+            return CMACPHVersion1Constants()
         if version == 2:
             logging.info('Loading version 2 constants')
             return CMACPHVersion2Constants()

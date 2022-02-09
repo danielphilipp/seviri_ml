@@ -278,6 +278,8 @@ def _unc_approx_1(pred, th, unc_params):
     minunc = unc_params['min1']
     maxunc = unc_params['max1']
 
+    minunc = max(minunc, 0)
+
     return (maxunc - minunc) * norm_diff + maxunc
 
 
@@ -287,6 +289,8 @@ def _unc_approx_0(pred, th, unc_params):
 
     minunc = unc_params['min0']
     maxunc = unc_params['max0']
+    
+    minunc = max(minunc, 0)
 
     return (maxunc - minunc) * norm_diff + maxunc
 
@@ -300,10 +304,10 @@ def _uncertainty(prediction, binary, variable, opts):
         threshold = opts.NN_COT_THRESHOLD
 
     if variable == 'COT':
-        unc_params = {'min1': opts.UNC_CLD_MIN,
-                      'max1': opts.UNC_CLD_MAX,
-                      'min0': opts.UNC_CLR_MIN,
-                      'max0': opts.UNC_CLR_MAX
+        unc_params = {'min1': opts.UNC_SLOPE_CLD + opts.UNC_INTERCEPT_CLD,
+                      'max1': opts.UNC_INTERCEPT_CLD,
+                      'min0': -opts.UNC_SLOPE_CLR + opts.UNC_INTERCEPT_CLR,
+                      'max0': opts.UNC_INTERCEPT_CLR
                       }
 
         unc = np.where(binary > IS_CLEAR,
@@ -317,10 +321,10 @@ def _uncertainty(prediction, binary, variable, opts):
                                      )  # where clear
                        )
     elif variable == 'CPH':
-        unc_params = {'min1': opts.UNC_ICE_MIN,
-                      'max1': opts.UNC_ICE_MAX,
-                      'min0': opts.UNC_WAT_MIN,
-                      'max0': opts.UNC_WAT_MAX
+        unc_params = {'min1': opts.UNC_SLOPE_ICE + opts.UNC_INTERCEPT_ICE,
+                      'max1': opts.UNC_INTERCEPT_ICE,
+                      'min0': -opts.UNC_SLOPE_LIQ + opts.UNC_INTERCEPT_LIQ,
+                      'max0': opts.UNC_INTERCEPT_LIQ
                       }
 
         unc = np.where(binary > IS_WATER,
@@ -333,17 +337,18 @@ def _uncertainty(prediction, binary, variable, opts):
                                      unc_params
                                      )  # where ice
                        )
-
+    unc = np.where(unc < 0, 0, unc)
+    unc = np.where(unc > 100, 100, unc)
     return unc
 
 
 def _check_prediction(prediction, parameters, masks):
     """ Check neural net regression for invalid values. """
     # mask prediction values outside valid regression limits
-    condition = np.logical_or(prediction > parameters.VALID_NOR_REGRESSION_MAX,
-                              prediction < parameters.VALID_NOR_REGRESSION_MIN
-                              )
-    prediction = np.where(condition, SREAL_FILL_VALUE, prediction)
+    #condition = np.logical_or(prediction > parameters.VALID_NOR_REGRESSION_MAX,
+    #                          prediction < parameters.VALID_NOR_REGRESSION_MIN
+    #                          )
+    prediction = np.where(prediction > 1, 1, prediction)
 
     # mask pixels where all channels are invalid (i.e. space pixels)
     prediction = np.where(masks['aci'] == 1, SREAL_FILL_VALUE, prediction)

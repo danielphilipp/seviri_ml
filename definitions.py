@@ -38,17 +38,41 @@ MANDATORY_OPTS = {'DATA_PATH': 'PATH',
                   }
 
 
+class CMACPHVersion1Constants:
+    def __init__(self):
+        # uncertainty parameters
+        self.INTERCEPT_LIQ = 50.18
+        self.INTERCEPT_ICE = 50.77
+        self.INTERCEPT_CLR = 50.34
+        self.INTERCEPT_CLD = 44.96
+
+        self.SLOPE_LIQ = 48.35
+        self.SLOPE_ICE = -48.58
+        self.SLOPE_CLR = 37.70
+        self.SLOPE_CLD = -47.26
+
+        # COT threshold
+        self.NN_COT_THRESHOLD = 0.12
+        # CPH threshold
+        self.NN_CPH_THRESHOLD = 0.50
+
+        # [0,1] regression value valid range
+        self.VALID_NOR_REGRESSION_MAX = 1.0
+        self.VALID_NOR_REGRESSION_MIN = 0.0
+
+
 class CMACPHVersion2Constants:
     def __init__(self):
         # uncertainty parameters
-        self.UNC_CLD_MIN = 0.00000
-        self.UNC_CLD_MAX = 44.9588
-        self.UNC_CLR_MIN = 12.6330
-        self.UNC_CLR_MAX = 50.3358
-        self.UNC_WAT_MIN = 1.82666
-        self.UNC_WAT_MAX = 50.1769
-        self.UNC_ICE_MIN = 2.19471
-        self.UNC_ICE_MAX = 50.7718
+        self.UNC_INTERCEPT_LIQ = 50.18 
+        self.UNC_INTERCEPT_ICE = 50.77
+        self.UNC_INTERCEPT_CLR = 50.34
+        self.UNC_INTERCEPT_CLD = 44.96
+
+        self.UNC_SLOPE_LIQ = 48.35
+        self.UNC_SLOPE_ICE = -48.58
+        self.UNC_SLOPE_CLR = 37.70
+        self.UNC_SLOPE_CLD = -47.26
 
         # COT threshold
         self.NN_COT_THRESHOLD = 0.12
@@ -63,14 +87,15 @@ class CMACPHVersion2Constants:
 class CMACPHVersion3Constants:
     def __init__(self):
         # uncertainty parameters
-        self.UNC_CLD_MIN = 0.00000
-        self.UNC_CLD_MAX = 44.9588
-        self.UNC_CLR_MIN = 12.6330
-        self.UNC_CLR_MAX = 50.3358
-        self.UNC_WAT_MIN = 1.82666
-        self.UNC_WAT_MAX = 50.1769
-        self.UNC_ICE_MIN = 2.19471
-        self.UNC_ICE_MAX = 50.7718
+        self.UNC_INTERCEPT_LIQ = 50.71
+        self.UNC_INTERCEPT_ICE = 44.54
+        self.UNC_INTERCEPT_CLR = 42.86
+        self.UNC_INTERCEPT_CLD = 48.04
+
+        self.UNC_SLOPE_LIQ = 47.16
+        self.UNC_SLOPE_ICE = -47.23
+        self.UNC_SLOPE_CLR = 25.31
+        self.UNC_SLOPE_CLD = -51.51
 
         # COT threshold
         self.NN_COT_THRESHOLD = 0.13
@@ -99,7 +124,18 @@ class ModelSetupCOT:
         self.scaler_filepath = None
 
     def set_models_scalers(self):
-        if self.version == 2:
+
+        if self.version == 1:
+            if self.backend == 'THEANO':
+                model = 'MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM' \
+                        '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v1.h5'
+            else:
+                model = 'MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM' \
+                        '_LR-0001_NE-300_BS-200_GSICS_TF2__2.4.1__v1.h5'
+
+            scaler = 'SCALER_CMA_GSICS_v1.pkl'
+
+        elif self.version == 2:
             if self.backend == 'THEANO':
                 model = 'MODEL_CMA_14_150_150_1_LOSS-MSE_OPT-ADAM' \
                         '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v2.h5'
@@ -139,7 +175,17 @@ class ModelSetupCPH:
         self.scaler_filepath = None
 
     def set_models_scalers(self):
-        if self.version == 2:
+        if self.version == 1:
+            if self.backend == 'THEANO':
+                model = 'MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM' \
+                        '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v1.h5'
+            else:
+                model = 'MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM' \
+                        '_LR-0001_NE-300_BS-200_GSICS_TF2__2.4.1__v1.h5'
+
+            scaler = 'SCALER_CPH_GSICS_v1.pkl'
+
+        elif self.version == 2:
             if self.backend == 'THEANO':
                 model = 'MODEL_CPH_14_40_40_1_LOSS-MSE_OPT-ADAM' \
                         '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v2.h5'
@@ -161,7 +207,7 @@ class ModelSetupCPH:
 
         else:
             raise Exception('Version {:d} not supported '
-                            'for COT models.'.format(self.version))
+                            'for CPH models.'.format(self.version))
 
         self.model_filepath = ojoin(self.data_path,
                                     'v{:d}'.format(self.version), model)
