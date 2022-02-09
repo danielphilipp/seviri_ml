@@ -247,7 +247,7 @@ class ModelSetupCTP:
 
         else:
             raise Exception('Version {:d} not supported '
-                            'for COT models.'.format(self.version))
+                            'for CTP models.'.format(self.version))
 
         self.model_lower_filepath = ojoin(self.data_path,
                                           'v{:d}'.format(self.version),
