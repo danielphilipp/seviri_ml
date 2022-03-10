@@ -8,6 +8,7 @@ from definitions import CMACPHVersion1Constants
 from definitions import CMACPHVersion2Constants
 from definitions import CMACPHVersion3Constants
 from definitions import CTPVersion3Constants
+from definitions import MLAYVersion3Constants
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
 logging.basicConfig(level=logging.DEBUG,
@@ -33,6 +34,13 @@ def get_parameters(version, variable):
         if version == 3:
             logging.info('Loading version 3 constants')
             return CTPVersion3Constants()
+        else:
+            raise Exception('No constants defined for version '
+                            '{}'.format(version))
+    elif variable == 'MLAY':
+        if version == 3:
+            logging.info('Loading version 3 constants')
+            return MLAYVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))

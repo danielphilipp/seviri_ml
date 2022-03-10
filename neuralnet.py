@@ -124,6 +124,23 @@ class NetworkCOT(NetworkBase):
         super().__init__(modelpath, scalerpath, backend)
 
 
+class NetworkMLAY(NetworkBase):
+    def __init__(self, opts):
+        self.opts = opts
+        modelpath = opts['MLAY_MODEL_FILEPATH']
+        scalerpath = opts['MLAY_SCALER_FILEPATH']
+        backend = opts['BACKEND']
+
+        self.version = opts['MLAY_MODEL_VERSION']
+
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpath)
+        else:
+            hf.check_tensorflow_version(modelpath)
+
+        super().__init__(modelpath, scalerpath, backend)
+
+
 class NetworkCTP(NetworkBase):
     def __init__(self, opts):
 

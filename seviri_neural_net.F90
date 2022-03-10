@@ -20,7 +20,6 @@
 ! None known.
 !------------------------------------------------------------------------------
 
-
 module seviri_neural_net_m
     use iso_c_binding
      
@@ -92,6 +91,39 @@ module seviri_neural_net_m
             integer(c_char) :: msg_index
             logical(c_bool) :: undo_true_reflectances
         end subroutine py_ann_ctp
+
+
+        ! interface to C function py_ann_ctp
+        subroutine py_ann_mlay(vis006, vis008, nir016, ir039, &
+                              ir062, ir073, ir087, ir108, ir120, &
+                              ir134, lsm, skt, solzen, satzen, nx, ny, &
+                              mlay_reg, mlay_bin, mlay_unc, msg_index, &
+                              undo_true_reflectances) bind(C, name="py_ann_mlay")
+            import :: c_ptr
+            import :: c_int
+            import :: c_float
+            import :: c_char
+            import :: c_bool
+            type(c_ptr), value :: vis006
+            type(c_ptr), value :: vis008
+            type(c_ptr), value :: nir016
+            type(c_ptr), value :: ir039
+            type(c_ptr), value :: ir062
+            type(c_ptr), value :: ir073
+            type(c_ptr), value :: ir087
+            type(c_ptr), value :: ir108
+            type(c_ptr), value :: ir120
+            type(c_ptr), value :: ir134
+            type(c_ptr), value :: lsm
+            type(c_ptr), value :: skt
+            type(c_ptr), value :: solzen
+            type(c_ptr), value :: satzen
+            real(c_float), dimension(*), intent(out) :: mlay_reg, mlay_unc
+            integer(c_char), dimension(*), intent(out) :: mlay_bin
+            integer(c_int) :: nx, ny
+            integer(c_char) :: msg_index
+            logical(c_bool) :: undo_true_reflectances
+        end subroutine py_ann_mlay
 
     end interface
 contains
@@ -190,5 +222,36 @@ subroutine seviri_ann_ctp(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
 
 end subroutine seviri_ann_ctp
 
+
+subroutine seviri_ann_mlay(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
+                        ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
+                        regression_mlay, binary_mlay, uncertainty_mlay, &
+                        msg_index, undo_true_reflectances)
+    use iso_c_binding
+
+    ! output arrays
+    real(c_float), intent(out) :: regression_mlay(:,:), uncertainty_mlay(:,:)
+    integer(c_char), intent(out) :: binary_mlay(:,:)
+
+    ! C-types
+    integer(c_int) :: nx ,ny
+    integer(c_char) :: msg_index
+    real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
+                                               & ir062, ir073, ir087, ir108, &
+                                               & ir120, ir134, skt, solzen, &
+                                               & satzen
+    integer(c_char), dimension(nx,ny), target :: lsm
+    logical(kind=1) :: undo_true_reflectances
+
+    ! Call Python neural network via Python C-API
+    call py_ann_mlay(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
+                     c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
+                     c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
+                     c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
+                     c_loc(solzen(1,1)), c_loc(satzen(1,1)), nx, ny, &
+                     regression_mlay, binary_mlay, uncertainty_mlay, &
+                     msg_index, undo_true_reflectances)
+
+end subroutine seviri_ann_mlay
 
 end module seviri_neural_net_m

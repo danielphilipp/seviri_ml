@@ -19,6 +19,9 @@ IS_CLEAR = 0
 IS_CLOUD = 1
 IS_WATER = 1
 IS_ICE = 2
+IS_SLAY = 0
+IS_MLAY = 1
+
 
 # miscellaneous constants
 DATA_NAMES = ['ir039', 'ir087', 'ir087_108', 'ir108', 'ir108_120',
@@ -32,6 +35,7 @@ MANDATORY_OPTS = {'DATA_PATH': 'PATH',
                   'COT_MODEL_VERSION': 'INT',
                   'CPH_MODEL_VERSION': 'INT',
                   'CTP_MODEL_VERSION': 'INT',
+                  'MLAY_MODEL_VERSION': 'INT',
                   'USE_THEANO_COMPILEDIR_LOCK': 'BOOL',
                   'USE_PID_COMPILEDIR': 'BOOL',
                   'CTP_UNCERTAINTY_METHOD': 'STR'
@@ -112,6 +116,15 @@ class CTPVersion3Constants:
         # CTP regression value valid range
         self.VALID_CTP_REGRESSION_MIN = 0.
         self.VALID_CTP_REGRESSION_MAX = 1050.
+
+
+class MLAYVersion3Constants:
+    def __init__(self):
+        self.NN_MLAY_THRESHOLD = 0.35
+
+        # [0,1] regression value valid range
+        self.VALID_NOR_REGRESSION_MAX = 1.0
+        self.VALID_NOR_REGRESSION_MIN = 0.0
 
 
 class ModelSetupCOT:
@@ -261,3 +274,34 @@ class ModelSetupCTP:
         self.scaler_filepath = ojoin(self.data_path,
                                      'v{:d}'.format(self.version),
                                      scaler)
+
+
+class ModelSetupMLAY:
+    def __init__(self, version, backend, data_path):
+        self.version = version
+        self.backend = backend
+        self.data_path = data_path
+
+        self.model_filepath = None
+        self.scaler_filepath = None
+
+    def set_models_scalers(self):
+
+        if self.version == 3:
+            if self.backend == 'THEANO':
+                model = 'MODEL_MLAY_16_100_100_1_LOSS-BCE_OPT-ADAM' \
+                        '_LR-0001_NE-50_BS-200_GSICS_THEANO__1.0.4__v3.h5'
+            else:
+                model = 'MODEL_MLAY_16_100_100_1_LOSS-BCE_OPT-ADAM' \
+                        '_LR-0001_NE-50_BS-200_GSICS_TF__2.4.1__v3.h5'
+
+            scaler = 'SCALER_MLAY_GSICS_v3.pkl'
+
+        else:
+            raise Exception('Version {:d} not supported '
+                            'for CPH models.'.format(self.version))
+
+        self.model_filepath = ojoin(self.data_path,
+                                    'v{:d}'.format(self.version), model)
+        self.scaler_filepath = ojoin(self.data_path,
+                                     'v{:d}'.format(self.version), scaler)
