@@ -49,7 +49,7 @@ COMPILE
 1. Edit make.config:
    - Select compilers (CC / F90)
    - Set full path to your numpy includes (NUMPYINCLUDE) typically located at: '/path/to/your/python/lib/python3.x/site-packages/numpy/core/include/numpy'.
-     '/path/to/your/python/lib/python3.x' can be determined with the shell command 'python3-config --ldflags'.
+     Can be located with python3 -c "import numpy; import os; print(os.path.join(numpy.get_include(), 'numpy'))"
    - Set full path to your Python includes (PYINCLUDE). You can find your PYINCLUDES with the following shell command: 'python3-config --includes'
 2. Run 'make'.
 3. static library 'libsevann.a' will be created.
