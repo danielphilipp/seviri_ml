@@ -1,6 +1,6 @@
 echo "########### YOUR NUMPY INCLUDE PATH ##########"
 python3 -c "import numpy as np; import os; print(os.path.join(np.get_include(), 'numpy'))"
 echo "########### YOUR PYTHON INCLUDE PATH ##########"
-python3-config --includes
+python3 -c "from sysconfig import get_paths as gp; print(gp()['include'])"
 echo "########### YOUR PYTHON LIBRARY PATH ###########"
-python3-config --ldflags
+python3 -c "from sysconfig import get_paths as gp; import os ;print(os.path.dirname(gp()['stdlib']))"
