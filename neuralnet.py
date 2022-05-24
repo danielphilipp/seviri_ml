@@ -107,14 +107,14 @@ class NetworkCPH(NetworkBase):
         super().__init__(modelpath, scalerpath, backend)
 
 
-class NetworkCOT(NetworkBase):
+class NetworkCMA(NetworkBase):
     def __init__(self, opts):
         self.opts = opts
-        modelpath = opts['COT_MODEL_FILEPATH']
-        scalerpath = opts['COT_SCALER_FILEPATH']
+        modelpath = opts['CMA_MODEL_FILEPATH']
+        scalerpath = opts['CMA_SCALER_FILEPATH']
         backend = opts['BACKEND']
 
-        self.version = opts['COT_MODEL_VERSION']
+        self.version = opts['CMA_MODEL_VERSION']
 
         if backend == 'THEANO':
             hf.check_theano_version(modelpath)

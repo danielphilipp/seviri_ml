@@ -15,9 +15,28 @@ logging.basicConfig(level=logging.DEBUG,
                     format=fmt
                     )
 
+def get_backend_name(backend_env):
+    # set Keras backend (Theano or Tensorflow 2)
+    backend = backend_env
+    if backend is not None:
+        backend = backend.upper()
+    else:
+        # default behaviour
+        backend = 'TENSORFLOW2'
+        logging.info('SEVIRI_ML_BACKEND env variable not defined. '
+                     'Setting backend to default {}'.format(backend))
+
+    if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
+        backend = 'TENSORFLOW2'
+    elif backend == 'THEANO':
+        backend = 'THEANO'
+    else:
+        raise Exception('Backend {} is invalid'.format(backend))
+    return backend
+
 
 def get_parameters(version, variable):
-    if variable == 'CPHCOT':
+    if variable in ['CPH', 'CMA']:
         if version == 1:
             logging.info('Loading version 1 constants')
             return CMACPHVersion1Constants()
@@ -54,7 +73,7 @@ def all_same(items):
     return all(x == items[0] for x in items)
 
 
-def _get_driver_opts(backend):
+def get_driver_opts(backend):
     """ Set path to driver file and read driver file. """
     # read driver file for SEVIRI neural network
     # assume driver file is in same directory as this file

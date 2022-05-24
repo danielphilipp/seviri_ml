@@ -27,12 +27,11 @@ module seviri_neural_net_m
      
     interface
         ! interface to C function py_ann_cot_cph
-        subroutine py_ann_cot_cph(vis006, vis008, nir016, ir039, & 
-                                 ir062, ir073, ir087, ir108, ir120, &
-                                 ir134, lsm, skt, solzen, satzen, nx, ny, reg_cot, &
-                                 bin_cot, unc_cot, reg_cph, bin_cph, &
-                                 unc_cph, msg_index, &
-                                 undo_true_reflectances) bind(C, name="py_ann_cot_cph")
+        subroutine py_ann_cma(vis006, vis008, nir016, ir039, &
+                              ir062, ir073, ir087, ir108, ir120, &
+                              ir134, lsm, skt, solzen, satzen, nx, ny, reg_cot, &
+                              bin_cot, unc_cot, msg_index, &
+                              undo_true_reflectances) bind(C, name="py_ann_cma")
             import :: c_ptr
             import :: c_int
             import :: c_float
@@ -52,20 +51,53 @@ module seviri_neural_net_m
             type(c_ptr), value :: skt
             type(c_ptr), value :: solzen
             type(c_ptr), value :: satzen
-            real(c_float), dimension(*), intent(out) :: reg_cot, unc_cot, &
-                                                        & reg_cph, unc_cph
-            integer(c_char), dimension(*), intent(out) :: bin_cot, bin_cph
+            real(c_float), dimension(*), intent(out) :: reg_cot, unc_cot
+            integer(c_char), dimension(*), intent(out) :: bin_cot
             integer(c_int) :: nx, ny
             integer(c_char) :: msg_index
             logical(c_bool) :: undo_true_reflectances
-        end subroutine py_ann_cot_cph
+        end subroutine py_ann_cma
+
+
+         ! interface to C function py_ann_cot_cph
+        subroutine py_ann_cph(vis006, vis008, nir016, ir039, &
+                              ir062, ir073, ir087, ir108, ir120, &
+                              ir134, lsm, skt, solzen, satzen, nx, ny, &
+                              reg_cph, bin_cph, unc_cph, cldmask, msg_index, &
+                              undo_true_reflectances) bind(C, name="py_ann_cph")
+            import :: c_ptr
+            import :: c_int
+            import :: c_float
+            import :: c_char
+            import :: c_bool
+            type(c_ptr), value :: vis006
+            type(c_ptr), value :: vis008
+            type(c_ptr), value :: nir016
+            type(c_ptr), value :: ir039
+            type(c_ptr), value :: ir062
+            type(c_ptr), value :: ir073
+            type(c_ptr), value :: ir087
+            type(c_ptr), value :: ir108
+            type(c_ptr), value :: ir120
+            type(c_ptr), value :: ir134
+            type(c_ptr), value :: lsm
+            type(c_ptr), value :: skt
+            type(c_ptr), value :: solzen
+            type(c_ptr), value :: satzen
+            type(c_ptr), value :: cldmask
+            real(c_float), dimension(*), intent(out) :: reg_cph, unc_cph
+            integer(c_char), dimension(*), intent(out) :: bin_cph
+            integer(c_int) :: nx, ny
+            integer(c_char) :: msg_index
+            logical(c_bool) :: undo_true_reflectances
+        end subroutine py_ann_cph
 
 
         ! interface to C function py_ann_ctp
         subroutine py_ann_ctp(vis006, vis008, nir016, ir039, &
                               ir062, ir073, ir087, ir108, ir120, &
                               ir134, lsm, skt, solzen, satzen, nx, ny, ctp, &
-                              ctp_unc, msg_index, &
+                              ctp_unc, cldmask, msg_index, &
                               undo_true_reflectances) bind(C, name="py_ann_ctp")
             import :: c_ptr
             import :: c_int
@@ -86,6 +118,7 @@ module seviri_neural_net_m
             type(c_ptr), value :: skt
             type(c_ptr), value :: solzen
             type(c_ptr), value :: satzen
+            type(c_ptr), value :: cldmask
             real(c_float), dimension(*), intent(out) :: ctp, ctp_unc
             integer(c_int) :: nx, ny
             integer(c_char) :: msg_index
@@ -93,11 +126,11 @@ module seviri_neural_net_m
         end subroutine py_ann_ctp
 
 
-        ! interface to C function py_ann_ctp
+        ! interface to C function py_ann_mlay
         subroutine py_ann_mlay(vis006, vis008, nir016, ir039, &
                               ir062, ir073, ir087, ir108, ir120, &
                               ir134, lsm, skt, solzen, satzen, nx, ny, &
-                              mlay_reg, mlay_bin, mlay_unc, msg_index, &
+                              mlay_reg, mlay_bin, mlay_unc, cldmask, msg_index, &
                               undo_true_reflectances) bind(C, name="py_ann_mlay")
             import :: c_ptr
             import :: c_int
@@ -118,6 +151,7 @@ module seviri_neural_net_m
             type(c_ptr), value :: skt
             type(c_ptr), value :: solzen
             type(c_ptr), value :: satzen
+            type(c_ptr), value :: cldmask
             real(c_float), dimension(*), intent(out) :: mlay_reg, mlay_unc
             integer(c_char), dimension(*), intent(out) :: mlay_bin
             integer(c_int) :: nx, ny
@@ -163,41 +197,74 @@ contains
 ! uncertainty_cph      2darr Out CPH uncertainty of CPH
 !------------------------------------------------------------------------------
 
-subroutine seviri_ann_cph_cot(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
-                        ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
-                        regression_cot, binary_cot, uncertainty_cot, regression_cph, &
-                        binary_cph, uncertainty_cph, msg_index, undo_true_reflectances)
+subroutine seviri_ann_cma(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
+                          ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
+                          regression_cot, binary_cot, uncertainty_cot, &
+                          msg_index, undo_true_reflectances)
     use iso_c_binding
     
     ! output arrays 
-    real(c_float), intent(out) :: regression_cot(:,:), uncertainty_cot(:,:) 
-    real(c_float), intent(out) :: regression_cph(:,:), uncertainty_cph(:,:)
-    integer(c_char), intent(out) :: binary_cot(:,:), binary_cph(:,:)
+    real(c_float), intent(out) :: regression_cot(:,:), uncertainty_cot(:,:)
+    integer(c_char), intent(out) :: binary_cot(:,:)
 
     ! C-types
     integer(c_int) :: nx ,ny
     integer(c_char) :: msg_index
     real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
                                                & ir062, ir073, ir087, ir108, &
-                                               & ir120, ir134, skt, solzen, satzen
+                                               & ir120, ir134, skt, solzen, &
+                                               & satzen
     integer(c_char), dimension(nx,ny), target :: lsm
     logical(kind=1) :: undo_true_reflectances
  
     ! Call Python neural network via Python C-API
-    call py_ann_cot_cph(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
-                        c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
-                        c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
-                        c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
-                        c_loc(solzen(1,1)), c_loc(satzen(1,1)), nx, ny, &
-                        regression_cot, binary_cot, uncertainty_cot, regression_cph, &
-                        binary_cph, uncertainty_cph, msg_index, undo_true_reflectances)
+    call py_ann_cma(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
+                    c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
+                    c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
+                    c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
+                    c_loc(solzen(1,1)), c_loc(satzen(1,1)), nx, ny, &
+                    regression_cot, binary_cot, uncertainty_cot, &
+                    msg_index, undo_true_reflectances)
 
-end subroutine seviri_ann_cph_cot
+end subroutine seviri_ann_cma
+
+
+subroutine seviri_ann_cph(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
+                          ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
+                          regression_cph, binary_cph, uncertainty_cph, cldmask, &
+                          msg_index, undo_true_reflectances)
+    use iso_c_binding
+
+    ! output arrays
+    real(c_float), intent(out) :: regression_cph(:,:), uncertainty_cph(:,:)
+    integer(c_char), intent(out) :: binary_cph(:,:)
+
+    ! C-types
+    integer(c_int) :: nx ,ny
+    integer(c_char) :: msg_index
+    real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
+                                               & ir062, ir073, ir087, ir108, &
+                                               & ir120, ir134, skt, solzen, &
+                                               & satzen
+
+    integer(c_char), dimension(nx,ny), target :: lsm, cldmask
+    logical(kind=1) :: undo_true_reflectances
+
+    ! Call Python neural network via Python C-API
+    call py_ann_cph(c_loc(vis006(1,1)), c_loc(vis008(1,1)), c_loc(nir016(1,1)), &
+                    c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
+                    c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
+                    c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
+                    c_loc(solzen(1,1)), c_loc(satzen(1,1)), &
+                    nx, ny, regression_cph, binary_cph, uncertainty_cph, &
+                    c_loc(cldmask(1,1)), msg_index, undo_true_reflectances)
+
+end subroutine seviri_ann_cph
 
 
 subroutine seviri_ann_ctp(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
                         ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
-                        ctp, ctp_unc, msg_index, undo_true_reflectances)
+                        ctp, ctp_unc, cldmask, msg_index, undo_true_reflectances)
     use iso_c_binding
 
     ! output arrays
@@ -208,8 +275,9 @@ subroutine seviri_ann_ctp(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
     integer(c_char) :: msg_index
     real(c_float), dimension(nx,ny), target :: vis006, vis008, nir016, ir039, &
                                                & ir062, ir073, ir087, ir108, &
-                                               & ir120, ir134, skt, solzen, satzen
-    integer(c_char), dimension(nx,ny), target :: lsm
+                                               & ir120, ir134, skt, solzen, &
+                                               & satzen
+    integer(c_char), dimension(nx,ny), target :: lsm, cldmask
     logical(kind=1) :: undo_true_reflectances
 
     ! Call Python neural network via Python C-API
@@ -218,14 +286,14 @@ subroutine seviri_ann_ctp(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
                     c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
                     c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
                     c_loc(solzen(1,1)), c_loc(satzen(1,1)),nx, ny, ctp, &
-                    ctp_unc, msg_index, undo_true_reflectances)
+                    ctp_unc, c_loc(cldmask(1,1)), msg_index, undo_true_reflectances)
 
 end subroutine seviri_ann_ctp
 
 
 subroutine seviri_ann_mlay(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
                         ir087, ir108, ir120, ir134, lsm, skt, solzen, satzen, &
-                        regression_mlay, binary_mlay, uncertainty_mlay, &
+                        regression_mlay, binary_mlay, uncertainty_mlay, cldmask, &
                         msg_index, undo_true_reflectances)
     use iso_c_binding
 
@@ -240,7 +308,7 @@ subroutine seviri_ann_mlay(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, 
                                                & ir062, ir073, ir087, ir108, &
                                                & ir120, ir134, skt, solzen, &
                                                & satzen
-    integer(c_char), dimension(nx,ny), target :: lsm
+    integer(c_char), dimension(nx,ny), target :: lsm, cldmask
     logical(kind=1) :: undo_true_reflectances
 
     ! Call Python neural network via Python C-API
@@ -250,7 +318,7 @@ subroutine seviri_ann_mlay(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, 
                      c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
                      c_loc(solzen(1,1)), c_loc(satzen(1,1)), nx, ny, &
                      regression_mlay, binary_mlay, uncertainty_mlay, &
-                     msg_index, undo_true_reflectances)
+                     c_loc(cldmask(1,1)), msg_index, undo_true_reflectances)
 
 end subroutine seviri_ann_mlay
 

@@ -32,10 +32,11 @@ TRUE_OPTS = ['true', 'True', 'T', 't', '1', '.True.', '.true.']
 FALSE_OPTS = ['false', 'False', 'F', 'f', '0', '.False.', '.false.']
 
 MANDATORY_OPTS = {'DATA_PATH': 'PATH',
-                  'COT_MODEL_VERSION': 'INT',
+                  'CMA_MODEL_VERSION': 'INT',
                   'CPH_MODEL_VERSION': 'INT',
                   'CTP_MODEL_VERSION': 'INT',
                   'MLAY_MODEL_VERSION': 'INT',
+                  'CORRECT_IR039_OUT_OF_RANGE': 'BOOL',
                   'USE_THEANO_COMPILEDIR_LOCK': 'BOOL',
                   'USE_PID_COMPILEDIR': 'BOOL',
                   'CTP_UNCERTAINTY_METHOD': 'STR'
@@ -127,7 +128,7 @@ class MLAYVersion3Constants:
         self.VALID_NOR_REGRESSION_MIN = 0.0
 
 
-class ModelSetupCOT:
+class ModelSetupCMA:
     def __init__(self, version, backend, data_path):
         self.version = version
         self.backend = backend
