@@ -1,7 +1,8 @@
 import helperfuncs as hf
 import numpy as np
 from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
-                         BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE)
+                         BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE,
+                         IS_MLAY, IS_SLAY)
 from nasa_impf_correction import correct_nasa_impf
 import neuralnet
 import logging
@@ -932,14 +933,35 @@ class ProcessorMLAY(ProcessorBase):
         # get threshold from driver file content
         threshold = self.parameters.NN_MLAY_THRESHOLD
         # apply threshold
-        binary = np.where(self.estimate > threshold, IS_CLOUD, IS_CLEAR)
+        binary = np.where(self.estimate > threshold, IS_MLAY, IS_SLAY)
         # mask pixels where regression array has fill value
         binary[self.estimate == SREAL_FILL_VALUE] = BYTE_FILL_VALUE
         return binary
 
+
     def _uncertainty(self):
         """ Calculate CMA/CPH uncertainy. """
-        unc = np.ones(self.estimate.shape)
+        opts = self.parameters
+
+        threshold = opts.NN_MLAY_THRESHOLD
+
+        unc_params = {
+            'min1': opts.UNC_SLOPE_MLAY + opts.UNC_INTERCEPT_MLAY,
+            'max1': opts.UNC_INTERCEPT_MLAY,
+            'min0': -opts.UNC_SLOPE_SLAY + opts.UNC_INTERCEPT_SLAY,
+            'max0': opts.UNC_INTERCEPT_SLAY
+                      }
+
+        unc = np.where(self.binary > IS_SLAY,
+                       self._unc_approx_1(self.estimate,
+                                          threshold,
+                                          unc_params
+                                          ),  # where water
+                       self._unc_approx_0(self.estimate,
+                                          threshold,
+                                          unc_params
+                                          )  # where ice
+                       )
         unc = np.where(unc < 0, 0, unc)
         unc = np.where(unc > 100, 100, unc)
         return unc

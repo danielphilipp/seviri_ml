@@ -121,7 +121,14 @@ class CTPVersion3Constants:
 
 class MLAYVersion3Constants:
     def __init__(self):
-        self.NN_MLAY_THRESHOLD = 0.35
+        # uncertainty parameters
+        self.UNC_INTERCEPT_MLAY = 51.90
+        self.UNC_INTERCEPT_SLAY = 46.38
+        self.UNC_SLOPE_MLAY = -52.41
+        self.UNC_SLOPE_SLAY = 46.84
+
+        # multilayer binary threshold
+        self.NN_MLAY_THRESHOLD = 0.5
 
         # [0,1] regression value valid range
         self.VALID_NOR_REGRESSION_MAX = 1.0

@@ -202,7 +202,7 @@ def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction MLA: {:.3f}".format(time.time() - start))
+    logging.info("Time for prediction MLAY: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_binary:
