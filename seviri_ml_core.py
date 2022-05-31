@@ -162,7 +162,7 @@ class ProcessorBase:
             has_invalid_item = has_invalid_item.reshape((self.xdim, self.ydim))
 
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
-            if self.variable in ['CMA', 'CPH']:
+            if self.variable in ['CMA', 'CPH', 'MLAY']:
                 # check if all channels are valid and ir039 invalid
                 # list of all channels except 039
                 all_chs_exc_039 = np.array(
