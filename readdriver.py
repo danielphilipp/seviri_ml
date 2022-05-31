@@ -4,7 +4,8 @@ import os
 import pathlib
 from definitions import MANDATORY_OPTS
 from definitions import TRUE_OPTS, FALSE_OPTS
-from definitions import ModelSetupCOT, ModelSetupCPH, ModelSetupCTP, ModelSetupMLAY
+from definitions import (ModelSetupCMA, ModelSetupCPH, ModelSetupCTP,
+                         ModelSetupMLAY)
 
 
 def _set_default_filepath():
@@ -81,10 +82,10 @@ def parse_nn_driver(driver_path, backend):
     opts = _check_parsed_opts(opts)
 
     # select model and scaler depending on version and backend
-    cot_setup = ModelSetupCOT(opts['COT_MODEL_VERSION'],
+    cma_setup = ModelSetupCMA(opts['CMA_MODEL_VERSION'],
                               opts['BACKEND'],
                               opts['DATA_PATH'])
-    cot_setup.set_models_scalers()
+    cma_setup.set_models_scalers()
     cph_setup = ModelSetupCPH(opts['CPH_MODEL_VERSION'],
                               opts['BACKEND'],
                               opts['DATA_PATH'])
@@ -95,13 +96,13 @@ def parse_nn_driver(driver_path, backend):
     ctp_setup.set_models_scalers()
 
     mlay_setup = ModelSetupMLAY(opts['MLAY_MODEL_VERSION'],
-                              opts['BACKEND'],
-                              opts['DATA_PATH'])
+                                opts['BACKEND'],
+                                opts['DATA_PATH'])
     mlay_setup.set_models_scalers()
 
     # set models to be used in options dictionary
-    opts['COT_MODEL_FILEPATH'] = cot_setup.model_filepath
-    opts['COT_SCALER_FILEPATH'] = cot_setup.scaler_filepath
+    opts['CMA_MODEL_FILEPATH'] = cma_setup.model_filepath
+    opts['CMA_SCALER_FILEPATH'] = cma_setup.scaler_filepath
     opts['CPH_MODEL_FILEPATH'] = cph_setup.model_filepath
     opts['CPH_SCALER_FILEPATH'] = cph_setup.scaler_filepath
     opts['CTP_LOWER_MODEL_FILEPATH'] = ctp_setup.model_lower_filepath

@@ -32,10 +32,11 @@ TRUE_OPTS = ['true', 'True', 'T', 't', '1', '.True.', '.true.']
 FALSE_OPTS = ['false', 'False', 'F', 'f', '0', '.False.', '.false.']
 
 MANDATORY_OPTS = {'DATA_PATH': 'PATH',
-                  'COT_MODEL_VERSION': 'INT',
+                  'CMA_MODEL_VERSION': 'INT',
                   'CPH_MODEL_VERSION': 'INT',
                   'CTP_MODEL_VERSION': 'INT',
                   'MLAY_MODEL_VERSION': 'INT',
+                  'CORRECT_IR039_OUT_OF_RANGE': 'BOOL',
                   'USE_THEANO_COMPILEDIR_LOCK': 'BOOL',
                   'USE_PID_COMPILEDIR': 'BOOL',
                   'CTP_UNCERTAINTY_METHOD': 'STR'
@@ -68,7 +69,7 @@ class CMACPHVersion1Constants:
 class CMACPHVersion2Constants:
     def __init__(self):
         # uncertainty parameters
-        self.UNC_INTERCEPT_LIQ = 50.18 
+        self.UNC_INTERCEPT_LIQ = 50.18
         self.UNC_INTERCEPT_ICE = 50.77
         self.UNC_INTERCEPT_CLR = 50.34
         self.UNC_INTERCEPT_CLD = 44.96
@@ -120,14 +121,21 @@ class CTPVersion3Constants:
 
 class MLAYVersion3Constants:
     def __init__(self):
-        self.NN_MLAY_THRESHOLD = 0.35
+        # uncertainty parameters
+        self.UNC_INTERCEPT_MLAY = 51.90
+        self.UNC_INTERCEPT_SLAY = 46.38
+        self.UNC_SLOPE_MLAY = -52.41
+        self.UNC_SLOPE_SLAY = 46.84
+
+        # multilayer binary threshold
+        self.NN_MLAY_THRESHOLD = 0.5
 
         # [0,1] regression value valid range
         self.VALID_NOR_REGRESSION_MAX = 1.0
         self.VALID_NOR_REGRESSION_MIN = 0.0
 
 
-class ModelSetupCOT:
+class ModelSetupCMA:
     def __init__(self, version, backend, data_path):
         self.version = version
         self.backend = backend

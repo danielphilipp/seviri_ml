@@ -1,9 +1,9 @@
-import predictCPHCOT as pCPHCOT
-import predictCTP as pCTP
-import predictMLAY as pMLAY
+import prediction_funcs as preds
 import numpy as np
 
-dims = (370, 370)
+
+# example data
+dims = (10, 10)
 arr1 = np.ones(dims)
 arr2 = np.ones(dims)
 arr3 = np.ones(dims)
@@ -21,30 +21,51 @@ satzen = np.ones(dims)
 
 # artificial cloudmask
 cldmask = np.ones(dims)
-cldmask[18:, 18:] = 0
+cldmask[18:, ::3] = 0
 
-res = pCPHCOT.predict_CPH_COT(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
-        arr9, arr10, arr11, arr12, solzen, satzen, False, 0)
+
+print('---------------- CHECK CMA -----------------')
+res = preds.predict_cma(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                        arr9, arr10, arr11, arr12, solzen=solzen,
+                        satzen=satzen, undo_true_refl=False,
+                        correct_vis_cal_nasa_to_impf=0)
 print(len(res), type(res))
 
-# ---- WITHOUT EXTERNAL CMA ----
-res = pCTP.predict_CTP(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
-        arr9, arr10, arr11, arr12, solzen, satzen, False, 0)
+print('---------------- CHECK CPH WITHOUT CLDMASK -----------------')
+res = preds.predict_cph(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                        arr9, arr10, arr11, arr12, solzen=solzen,
+                        satzen=satzen, undo_true_refl=False,
+                        correct_vis_cal_nasa_to_impf=0)
 print(len(res), type(res))
 
-res = pMLAY.predict_MLAY(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
-        arr9, arr10, arr11, arr12, solzen, satzen, False, 0)
+print('---------------- CHECK CPH WITH CLDMASK -----------------')
+res = preds.predict_cph(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                        arr9, arr10, arr11, arr12, solzen=solzen,
+                        satzen=satzen, undo_true_refl=False,
+                        correct_vis_cal_nasa_to_impf=0, cldmask=cldmask)
 print(len(res), type(res))
 
-
-# ---- WITH EXTERNAL CMA ----
-res = pCTP.predict_CTP(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
-        arr9, arr10, arr11, arr12, solzen, satzen, False, 0, cldmask)
+print('---------------- CHECK CTP WITHOUT CLDMASK -----------------')
+res = preds.predict_ctp(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                        arr9, arr10, arr11, arr12, solzen=solzen,
+                        satzen=satzen, undo_true_refl=False,
+                        correct_vis_cal_nasa_to_impf=0)
 print(len(res), type(res))
 
-res = pMLAY.predict_MLAY(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
-        arr9, arr10, arr11, arr12, solzen, satzen, False, 0, cldmask)
+print('---------------- CHECK CTP WITH CLDMASK -----------------')
+res = preds.predict_ctp(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                        arr9, arr10, arr11, arr12, solzen=solzen,
+                        satzen=satzen, undo_true_refl=False,
+                        correct_vis_cal_nasa_to_impf=0, cldmask=cldmask)
 print(len(res), type(res))
 
+print('---------------- CHECK MLAY WITHOUT CLDMASK -----------------')
+res = preds.predict_mlay(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                         arr9, arr10, arr11, arr12, solzen, satzen, False, 0)
+print(len(res), type(res))
 
-
+print('---------------- CHECK MLAY WITH CLDMASK -----------------')
+res = preds.predict_mlay(arr1, arr2, arr3, arr4, arr5, arr6, arr7, arr8,
+                         arr9, arr10, arr11, arr12, solzen, satzen, False, 0,
+                         cldmask)
+print(len(res), type(res))
