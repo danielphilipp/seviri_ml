@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.DEBUG,
                     format=fmt
                     )
 
+
 def get_backend_name(backend_env):
     # set Keras backend (Theano or Tensorflow 2)
     backend = backend_env

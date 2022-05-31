@@ -4,7 +4,6 @@ from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
                          BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE)
 from nasa_impf_correction import correct_nasa_impf
 import neuralnet
-import time
 import logging
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
@@ -40,8 +39,8 @@ class ProcessorBase:
 
         if self.do_correct_nasa_impf in [1, 2, 3, 4]:
             logging.info('Correcting VIS calibration from NASA to '
-                         'IMPF for MSG{:d}'.format(
-                self.do_correct_nasa_impf))
+                         'IMPF for MSG{:d}'.format(self.do_correct_nasa_impf))
+
             c = correct_nasa_impf(vis006p, vis008p, nir016p,
                                   self.do_correct_nasa_impf)
             vis006p, vis008p, nir016p = c
@@ -89,43 +88,43 @@ class ProcessorBase:
             data_lst = [
                 self.data.ir039,  # 1
                 self.data.ir087,  # 2
-                ir087_108,   # 3
+                ir087_108,        # 3
                 self.data.ir108,  # 4
-                ir108_120,   # 5
+                ir108_120,        # 5
                 self.data.ir120,  # 6
                 self.data.ir134,  # 7
                 self.data.lsm,    # 8
-                nir016p,     # 9
-                self.data.skt,    # 10
-                vis006p,     # 11
-                vis008p,     # 12
+                nir016p,          # 9
+                skt,              # 10
+                vis006p,          # 11
+                vis008p,          # 12
                 self.data.ir062,  # 13
-                ir073        # 14
+                self.data.ir073   # 14
             ]
         elif self.model_version == 3:
             # list of arrays must be kept in this order!
             data_lst = [
-                self.data.ir039,  # 1
-                self.data.ir087,  # 2
-                ir087_108,   # 3
-                self.data.ir108,  # 4
-                ir108_120,   # 5
-                self.data.ir120,  # 6
-                self.data.ir134,  # 7
-                self.data.lsm,    # 8
-                nir016p,     # 9
-                self.data.satzen, # 10
-                self.data.skt,    # 11
-                self.data.solzen, # 12
-                vis006p,     # 13
-                vis008p,     # 14
-                self.data.ir062,  # 15
-                self.data.ir073   # 16
+                self.data.ir039,   # 1
+                self.data.ir087,   # 2
+                ir087_108,         # 3
+                self.data.ir108,   # 4
+                ir108_120,         # 5
+                self.data.ir120,   # 6
+                self.data.ir134,   # 7
+                self.data.lsm,     # 8
+                nir016p,           # 9
+                self.data.satzen,  # 10
+                skt,               # 11
+                self.data.solzen,  # 12
+                vis006p,           # 13
+                vis008p,           # 14
+                self.data.ir062,   # 15
+                self.data.ir073    # 16
             ]
         else:
-            raise Exception(RuntimeError,
-                        'Model version {} invalid. '
-                        'Allowed are 1, 2 and 3.'.format(self.model_version))
+            msg = 'Model version {} invalid. Allowed are ' \
+                  '1, 2 and 3.'.format(self.model_version)
+            raise Exception(RuntimeError, msg)
 
         # check if array dimensions are equal throughout all arrays
         # if all dimensions are equal: set dimension constants for reshaping
@@ -178,13 +177,15 @@ class ProcessorBase:
                             self.data.ir039 < 0
                             )
                 # 039 can be invalid if it is a space pixel.
+                # Don't use those cases
                 ir039_invalid_disk = np.where(np.logical_and(
                     ir039_invalid,
                     all_channels_valid_exc_039
                     ), 1, 0)
+
                 self.ir039_invalid = ir039_invalid_disk
                 self.n_ir039_invalid = np.sum(self.ir039_invalid)
-                logging.info('N_IR039_INVALID: '+ str(self.n_ir039_invalid))
+                logging.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
         all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
                             self.data.ir087, self.data.ir108, self.data.ir120,
@@ -208,13 +209,12 @@ class ProcessorBase:
         self.all_channels_invalid = all_channels_invalid
         self.all_channels_valid_idxs = all_channels_valid_idxs[0]
 
-
         self.scaled_data = self.networks.scale_input(idata)
 
 
 class InputData:
     def __init__(self, vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-               ir108, ir120, ir134, lsm, skt, solzen, satzen):
+                 ir108, ir120, ir134, lsm, skt, solzen, satzen):
         self.vis006 = vis006
         self.vis008 = vis008
         self.nir016 = nir016
@@ -362,12 +362,16 @@ class ProcessorCMA(ProcessorBase):
                     unc = np.where(self.ir039_invalid == 1,
                                    self.parameters.UNC_INTERCEPT_CLD, unc)
 
-            # penalize cases where at least 1 input variable is invalid with higher unc
+            # penalize cases where at least 1 input variable is invalid with
+            # higher unc
             unc = np.where(self.has_invalid_item, unc * 1.1, unc)
             # mask cases where all channels are invalid
-            unc = np.where(self.all_channels_invalid == 1,
+            unc = np.where(self.all_channels_invalid,
                            SREAL_FILL_VALUE, unc)
             unc = np.where(~np.isfinite(unc), SREAL_FILL_VALUE, unc)
+            unc = np.where(self.estimate == SREAL_FILL_VALUE,
+                           SREAL_FILL_VALUE,
+                           unc)
             unc = unc.astype(SREAL)
             self.uncertainty = unc
             self.uncertainty_done = True
@@ -410,7 +414,8 @@ class ProcessorCMA(ProcessorBase):
                                           unc_params
                                           )  # where ice
                        )
-        unc = np.where(unc < 0, 0, unc)
+
+        unc = np.where(unc <= 0, 0, unc)
         unc = np.where(unc > 100, 100, unc)
         return unc
 
@@ -483,7 +488,6 @@ class ProcessorCPH(ProcessorBase):
         super().__init__(data, self.networks, undo_true_refl,
                          correct_vis_cal_nasa_to_impf, cldmask, variable)
 
-
     def _check_prediction(self, prediction):
         prediction = np.where(prediction > 1, 1, prediction)
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
@@ -502,7 +506,6 @@ class ProcessorCPH(ProcessorBase):
                               prediction)
         prediction = prediction.astype(SREAL)
         return prediction
-
 
     def get_prediction(self):
         # run data preparation
@@ -535,7 +538,6 @@ class ProcessorCPH(ProcessorBase):
         self.estimate = estimate
         self.prediction_done = True
 
-
         return estimate
 
     def get_binary(self):
@@ -550,13 +552,14 @@ class ProcessorCPH(ProcessorBase):
                     binary = np.where(self.ir039_invalid == 1, IS_ICE,
                                       binary)
 
-            binary = np.where(self.all_channels_invalid, BYTE_FILL_VALUE, binary)
-            binary = np.where(~np.isfinite(binary), BYTE_FILL_VALUE, binary)
+            binary = np.where(self.all_channels_invalid,
+                              BYTE_FILL_VALUE,
+                              binary)
+            binary = np.where(~np.isfinite(binary),
+                              BYTE_FILL_VALUE,
+                              binary)
             binary = binary.astype(BYTE)
-            #if self.cldmask is not None:
-            #    binary = np.where(self.cldmask == IS_CLEAR,
-            #                      BYTE_FILL_VALUE,
-            #                      binary)
+
             self.binary = binary
             self.binary_done = True
             return binary
@@ -576,11 +579,16 @@ class ProcessorCPH(ProcessorBase):
                     unc = np.where(self.ir039_invalid == 1,
                                    self.parameters.UNC_INTERCEPT_ICE, unc)
 
-            # penalize cases where at least 1 input variable is invalid with higher unc
+            # penalize cases where at least 1 input variable is invalid with
+            # higher unc
             unc = np.where(self.has_invalid_item, unc * 1.1, unc)
             # mask cases where all channels are invalid
-            unc = np.where(self.all_channels_invalid == 1, SREAL_FILL_VALUE, unc)
-            unc = np.where(~np.isfinite(unc), SREAL_FILL_VALUE, unc)
+            unc = np.where(self.all_channels_invalid == 1,
+                           SREAL_FILL_VALUE,
+                           unc)
+            unc = np.where(~np.isfinite(unc),
+                           SREAL_FILL_VALUE,
+                           unc)
             unc = unc.astype(SREAL)
             if self.cldmask is not None:
                 unc = np.where(self.cldmask == IS_CLEAR,
@@ -619,13 +627,13 @@ class ProcessorCPH(ProcessorBase):
 
         unc = np.where(self.binary > IS_WATER,
                        self._unc_approx_1(self.estimate,
-                                     threshold,
-                                     unc_params
-                                     ),  # where water
+                                          threshold,
+                                          unc_params
+                                          ),  # where water
                        self._unc_approx_0(self.estimate,
-                                     threshold,
-                                     unc_params
-                                     )  # where ice
+                                          threshold,
+                                          unc_params
+                                          )  # where ice
                        )
         unc = np.where(unc < 0, 0, unc)
         unc = np.where(unc > 100, 100, unc)
@@ -784,8 +792,8 @@ class ProcessorCTP(ProcessorBase):
             mean_sigma = 0.5 * (lower_sigma + upper_sigma)
             if self.cldmask is not None:
                 mean_sigma = np.where(self.cldmask == IS_CLEAR,
-                                    SREAL_FILL_VALUE,
-                                    mean_sigma)
+                                      SREAL_FILL_VALUE,
+                                      mean_sigma)
             self.uncertainty = mean_sigma
             return mean_sigma
         else:
@@ -903,7 +911,8 @@ class ProcessorMLAY(ProcessorBase):
         if self.binary_done and self.prediction_done:
             # uncertainty
             unc = self._uncertainty()
-            # penalize cases where at least 1 input variable is invalid with higher unc
+            # penalize cases where at least 1 input variable is invalid with
+            # higher unc
             unc = np.where(self.has_invalid_item, unc * 1.1, unc)
             # mask cases where all channels are invalid
             unc = np.where(self.all_channels_invalid == 1,
@@ -956,6 +965,3 @@ class ProcessorMLAY(ProcessorBase):
         minunc = max(minunc, 0)
 
         return (maxunc - minunc) * norm_diff + maxunc
-
-
-

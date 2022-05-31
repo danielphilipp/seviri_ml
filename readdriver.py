@@ -4,7 +4,8 @@ import os
 import pathlib
 from definitions import MANDATORY_OPTS
 from definitions import TRUE_OPTS, FALSE_OPTS
-from definitions import ModelSetupCMA, ModelSetupCPH, ModelSetupCTP, ModelSetupMLAY
+from definitions import (ModelSetupCMA, ModelSetupCPH, ModelSetupCTP,
+                         ModelSetupMLAY)
 
 
 def _set_default_filepath():
@@ -95,8 +96,8 @@ def parse_nn_driver(driver_path, backend):
     ctp_setup.set_models_scalers()
 
     mlay_setup = ModelSetupMLAY(opts['MLAY_MODEL_VERSION'],
-                              opts['BACKEND'],
-                              opts['DATA_PATH'])
+                                opts['BACKEND'],
+                                opts['DATA_PATH'])
     mlay_setup.set_models_scalers()
 
     # set models to be used in options dictionary

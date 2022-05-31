@@ -5,15 +5,10 @@
     Author: Daniel Philipp (DWD)
 """
 
-import neuralnet
-import numpy as np
 import time
 import os
 import logging
 import helperfuncs as hf
-from definitions import (SREAL_FILL_VALUE, BYTE_FILL_VALUE, SREAL,
-                         BYTE, IS_CLEAR, IS_CLOUD, IS_WATER, IS_ICE)
-from nasa_impf_correction import correct_nasa_impf
 import seviri_ml_core
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
@@ -33,7 +28,8 @@ if backend == 'THEANO':
 
 def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
-                undo_true_refl=False, correct_vis_cal_nasa_to_impf=0):
+                undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
+                make_binary=True, make_uncertainty=True):
     logging.info('---------- RUNNING CMA ANN ----------')
 
     v = 'CMA'
@@ -46,6 +42,8 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
 
     cldmask = None
 
+    results = []
+
     # create a processor instance
     proc = seviri_ml_core.ProcessorCMA(
                         data, undo_true_refl, correct_vis_cal_nasa_to_impf,
@@ -55,20 +53,24 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     start = time.time()
     prediction = proc.get_prediction()
     logging.info("Time for prediction CMA: {:.3f}".format(time.time() - start))
+    results.append(prediction)
 
-    # apply threshold
-    binary = proc.get_binary()
+    if make_binary:
+        # apply threshold
+        binary = proc.get_binary()
+        results.append(binary)
+    if make_uncertainty:
+        # run uncertainty calculation
+        uncertainty = proc.get_uncertainty()
+        results.append(uncertainty)
 
-    # run uncertainty calculation
-    uncertainty = proc.get_uncertainty()
-
-    return [prediction, binary, uncertainty]
+    return results
 
 
 def predict_cph(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
                 undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
-                cldmask=None):
+                cldmask=None, make_binary=True, make_uncertainty=True):
     logging.info('---------- RUNNING CPH ANN ----------')
 
     v = 'CPH'
@@ -84,23 +86,31 @@ def predict_cph(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                         data, undo_true_refl, correct_vis_cal_nasa_to_impf,
                         cldmask, v, opts
                         )
+
+    results = []
+
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
     logging.info("Time for prediction CPH: {:.3f}".format(time.time() - start))
+    results.append(prediction)
 
-    # apply threshold
-    binary = proc.get_binary()
-    # run uncertainty calculation
-    uncertainty = proc.get_uncertainty()
+    if make_binary:
+        # apply threshold
+        binary = proc.get_binary()
+        results.append(binary)
+    if make_uncertainty:
+        # run uncertainty calculation
+        uncertainty = proc.get_uncertainty()
+        results.append(uncertainty)
 
-    return [prediction, binary, uncertainty]
+    return results
 
 
 def predict_ctp(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
                 undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
-                cldmask=None):
+                cldmask=None, make_uncertainty=True):
     """
         Main function that calls the neural network for CTP prediction.
 
@@ -148,24 +158,30 @@ def predict_ctp(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                         data, undo_true_refl, correct_vis_cal_nasa_to_impf,
                         cldmask, v, opts
                         )
+
+    results = []
+
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
     logging.info("Time for prediction CTP: {:.3f}".format(time.time() - start))
+    results.append(prediction)
 
-    # run uncertainty calculation
-    start = time.time()
-    uncertainty = proc.get_uncertainty()
-    logging.info('Time for calculating uncertainty: '
-                 '{:.3f}'.format(time.time() - start))
+    if make_uncertainty:
+        # run uncertainty calculation
+        start = time.time()
+        uncertainty = proc.get_uncertainty()
+        logging.info('Time for calculating uncertainty: '
+                     '{:.3f}'.format(time.time() - start))
+        results.append(uncertainty)
 
-    return [prediction, uncertainty]
+    return results
 
 
 def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
-                undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
-                cldmask=None):
+                 ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None,
+                 undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
+                 cldmask=None, make_binary=True, make_uncertainty=True):
     logging.info('---------- RUNNING MLAY ANN ----------')
 
     v = 'MLAY'
@@ -180,17 +196,22 @@ def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                         data, undo_true_refl, correct_vis_cal_nasa_to_impf,
                         cldmask, v, opts
                         )
+
+    results = []
+
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
     logging.info("Time for prediction MLA: {:.3f}".format(time.time() - start))
+    results.append(prediction)
 
-    # apply threshold
-    binary = proc.get_binary()
-    # run uncertainty calculation
-    uncertainty = proc.get_uncertainty()
+    if make_binary:
+        # apply threshold
+        binary = proc.get_binary()
+        results.append(binary)
+    if make_uncertainty:
+        # run uncertainty calculation
+        uncertainty = proc.get_uncertainty()
+        results.append(uncertainty)
 
-    return [prediction, binary, uncertainty]
-
-
-
+    return results

@@ -69,7 +69,7 @@ class CMACPHVersion1Constants:
 class CMACPHVersion2Constants:
     def __init__(self):
         # uncertainty parameters
-        self.UNC_INTERCEPT_LIQ = 50.18 
+        self.UNC_INTERCEPT_LIQ = 50.18
         self.UNC_INTERCEPT_ICE = 50.77
         self.UNC_INTERCEPT_CLR = 50.34
         self.UNC_INTERCEPT_CLD = 44.96
