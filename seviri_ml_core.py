@@ -912,14 +912,29 @@ class ProcessorMLAY(ProcessorBase):
         if self.binary_done and self.prediction_done:
             # uncertainty
             unc = self._uncertainty()
+            if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
+                if self.n_ir039_invalid > 0:
+                    # modify pixels where ir039 is invalid due to really cold
+                    # clouds (out of range for 039 channel sometimes at night)
+                    # set uncertainty to max uncertainty
+                    unc = np.where(self.ir039_invalid == 1,
+                                   self.parameters.UNC_INTERCEPT_MLAY, unc)
+
             # penalize cases where at least 1 input variable is invalid with
             # higher unc
             unc = np.where(self.has_invalid_item, unc * 1.1, unc)
             # mask cases where all channels are invalid
             unc = np.where(self.all_channels_invalid == 1,
-                           SREAL_FILL_VALUE, unc)
-            unc = np.where(~np.isfinite(unc), SREAL_FILL_VALUE, unc)
+                           SREAL_FILL_VALUE,
+                           unc)
+            unc = np.where(~np.isfinite(unc),
+                           SREAL_FILL_VALUE,
+                           unc)
             unc = unc.astype(SREAL)
+            if self.cldmask is not None:
+                unc = np.where(self.cldmask == IS_CLEAR,
+                               SREAL_FILL_VALUE,
+                               unc)
             self.uncertainty = unc
             self.uncertainty_done = True
             return unc
