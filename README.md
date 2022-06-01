@@ -1,13 +1,13 @@
 # SEVIRI_ML
 Machine learning based module to retrieve a set of cloud variables from Spinning Enhanced Visible and InfraRed Imager (SEVIRI) measurements using its full spectral capabilities. The available variables to be retrieved are:
 
-- Cloud Mask (CMA) - predictCPHCOT.py
+- Cloud Mask (CMA) - prediction_funcs.predict_cma()
 
-- Cloud Phase (CPH) - predictCPHCOT.py
+- Cloud Phase (CPH) - prediction_funcs.predict_cph()
 
-- Cloud Top Pressure (CTP) - predictCTP.py
+- Cloud Top Pressure (CTP) - prediction_funcs.predict_ctp()
 
-- Multilayer Flag (MLAY) - predictMLAY.py
+- Multilayer Flag (MLAY) - prediction_funcs.predict_mlay()
 
 The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
 
@@ -35,22 +35,21 @@ Both are provided in './data/v{1,2,3}'. To select a certain backend set environm
 
 USE WITH PURE PYTHON
 -------------------------------------------
-1. Import predictCPHCOT.py / predictCTP.py / predictMLAY.py into your main script.
-2. Call predict{CPHCOT, CTP, MLAY}.predict_{CPH_COT, CTP, MLAY}(vis006, vis008, nir016, ir039, ir062, ir073, ir087, ir108, ir120, ir134, lsm, skt, solzen=None, satzen=None, undo_true_refl=False, correct_vis_cal_nasa_to_impf=0)
+1. Import prediction_funcs into your main script.
+2. Call prediction_funcs.predict_{cma, cph, ctp, mlay}()
 3. The function returns a list with following structure: 
-   - predict_CPH_COT(args, kwargs): [COT_regression, CMA, CMA_uncertainty, CPH_regression, CPH, CPH_uncertainty]
-   - predict_CTP(args, kwargs): [CTP, CTP_uncertainty]
-   - predict_MLAY(args, kwargs): [MLAY_probability, MLAY_flag, MLAY_uncertainty]
+   - predict_cma/predict_cph/predict_mlay(args, kwargs): [COT_regression, CMA, CMA_uncertainty, CPH_regression, CPH, CPH_uncertainty]
+   - predict_ctp(args, kwargs): [CTP, CTP_uncertainty]
 
 undo_true_refl is a logical variable specifying if visible channels (vis006, vis008, ir016) should be multiplied by the cosine of the solar zenith angle to remove this normalization (default False). correct_vis_cal_nasa_to_impf is a integer variable specifying if the visible channels should be linearily corrected from the NASA calibration to the IMPF calibration with which the networks were trained. 0 = No correction if your visible channels were calibrated with IMPF coefficients. 1 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG1. 2 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG2. 3 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG3. 4 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG4.
 
 COMPILE
 -------------------------------------------
-1. Edit make.config:
+1. run get_py_config.sh to get your Python/Numpy library and include paths
+2. Edit make.config:
    - Select compilers (CC / F90)
-   - Set full path to your numpy includes (NUMPYINCLUDE) typically located at: '/path/to/your/python/lib/python3.x/site-packages/numpy/core/include/numpy'.
-     Can be located with python3 -c "import numpy; import os; print(os.path.join(numpy.get_include(), 'numpy'))"
-   - Set full path to your Python includes (PYINCLUDE). You can find your PYINCLUDES with the following shell command: 'python3-config --includes'
+   - Set full path to your Numpy includes (NUMPYINCLUDE).
+   - Set full path to your Python includes (PYINCLUDE). 
 2. Run 'make'.
 3. static library 'libsevann.a' will be created.
 4. Fortran module file 'SEVIRI_NEURAL_NET_M.mod' for use 
@@ -69,10 +68,11 @@ USE WITH ORAC
 5. Add Python libs to your main ORAC LIB FILE. You can find your Python libraries with the following shell command: 'python3-config --ldflags'
 6. Compile the pre_processor with 
    "-DINCLUDE_SEVIRI_NEURALNET" macro.
-6. Run ORAC with preproc driver option 
-   "USE_SEVIRI_ANN=True" (default is to False) and 
-   "USE_GSICS=True" (default is to True).
-   
+6. Enable ORAC use with preproc driver option 
+   CMA/CPH: "USE_SEVIRI_ANN_CMA_CPH=T" (default is to False)
+   CTP: "USE_SEVIRI_ANN_CTP_FG=T" (default is to False)
+   MLAY: "USE_SEVIRI_ANN_MLAY=T" (default is to False)
+ 
 INFORMATION ABOUT MODELS
 -------------------------------------------
 - Version 1 and 2:
@@ -87,3 +87,4 @@ INFORMATION ABOUT MODELS
 - Version 3:
 
    Models were re-trained with all 2018 months of CALIOP v4 data collocated with SEVIRI measurements, a land-sea mask and ERA5 skin temperature. Solar and satellite zenith angles have been added to the network input features. Theresholds and uncertainty characterization has been updated. CTP and MLAY has been added to the available variables. 
+
