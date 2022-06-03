@@ -43,6 +43,8 @@ results = predictCTP.predict_CTP(himawari_like_seviri)
 ------------------------
 """
 
+import numpy as np
+
 
 COEFFS_MET11_NIGHT = {
     'HIMAWARI-AHI': {
@@ -99,6 +101,12 @@ COEFFS_MET11_NIGHT = {
         }
 }
 
+WMO_ID_MAPPING = {270: 'GOES16-ABI',
+                  271: 'GOES17-ABI',
+                  173: 'HIMAWARI-AHI',
+                  55: 'METEOSAT8-SEVIRI',
+                  70: 'METEOSAT11-SEVIRI'}
+
 AVAILABLE_CHANNELS = ['VIS006', 'VIS008', 'NIR016', 'IR_039', 'IR_062',
                       'IR_073', 'IR_087', 'IR_097', 'IR_108', 'IR_120',
                       'IR_134']
@@ -106,14 +114,16 @@ AVAILABLE_CHANNELS = ['VIS006', 'VIS008', 'NIR016', 'IR_039', 'IR_062',
 AVAILABLE_INPUT_SATS = ['HIMAWARI-AHI',
                         'GOES16-ABI',
                         'GOES17-ABI',
-                        'METEOSAT8-SEVIRI']
+                        'METEOSAT8-SEVIRI',
+                        'ISCCP-NG']
 
 AVAILABLE_TARGET_SATS = ['METEOSAT11-SEVIRI']
 
 
 class SpectralBandAdjustment:
     def __init__(self, input_sat, input_sat_data,
-                 target_sat='METEOSAT11-SEVIRI', verbose=False):
+                 target_sat='METEOSAT11-SEVIRI', verbose=False,
+                 isccpng_wmo_id=None):
         """ input_sat (str):       Name of input satellite to be transformed.
                                    Select from AVAILABLE INPUT_SATS
             input_sat_data (dict): Dictionary of input satellite data for
@@ -129,6 +139,7 @@ class SpectralBandAdjustment:
         self.target_sat = target_sat
         self.transformed = input_sat_data
         self.verbose = verbose
+        self.isccpng_wmo_id = isccpng_wmo_id
 
         self._check_sats()
 
@@ -146,6 +157,13 @@ class SpectralBandAdjustment:
                             'Choose from {}'.format(self.target_sat,
                                                     AVAILABLE_TARGET_SATS))
 
+    def _get_coeffs(self, ch, sat):
+        if not sat == 'METEOSAT11-SEVIRI':
+            coeffs = COEFFS_MET11_NIGHT[sat][ch]
+        else:
+            coeffs = {'slope': 1.0, 'offset': 0.0}
+        return coeffs['slope'], coeffs['offset']
+
     def transform(self):
         """ Linearily transform input_sat_data to mimic the target satellite's
         spectral band.
@@ -159,16 +177,33 @@ class SpectralBandAdjustment:
 
         for ch in AVAILABLE_CHANNELS:
             if ch in self.transformed.keys():
-                slope = COEFFS_MET11_NIGHT[self.input_sat][ch]['slope']
-                offset = COEFFS_MET11_NIGHT[self.input_sat][ch]['offset']
-                self.transformed[ch] = self._apply_transform(
+                if self.input_sat != 'ISCCP-NG':
+                    slope, offset = self._get_coeffs(ch, self.input_sat)
+
+                    self.transformed[ch] = self._apply_transform(
                                                         slope,
                                                         offset,
                                                         self.transformed[ch]
                                                         )
-                if self.verbose:
-                    print('   >>> Transformed {} with slope={:.4f} and '
+                    if self.verbose:
+                        print('   >>> Transformed {} with slope={:.4f} and '
                           'offset={:.4f}'.format(ch, slope, offset))
+                else:
+                    if self.isccpng_wmo_id is None:
+                        raise Exception('isccpng_wmo_id must be provided if '
+                                        'input_sat is ISCCP-NG')
+                    for sat_id  in WMO_ID_MAPPING.keys():
+                        slope, offset = self._get_coeffs(ch, WMO_ID_MAPPING[sat_id])
+                        self.transformed[ch] = np.where(
+                                                self.isccpng_wmo_id == sat_id, 
+                                                self._apply_transform(
+                                                            slope, 
+                                                            offset, 
+                                                            self.transformed[ch]
+                                                            ), 
+                                                self.transformed[ch]
+                                                )
+
             else:
                 if self.verbose:
                     print('   >>> Channel {} not found in input_sat_data '
@@ -194,15 +229,31 @@ class SpectralBandAdjustment:
 
         for ch in AVAILABLE_CHANNELS:
             if ch in self.transformed.keys():
-                slope = COEFFS_MET11_NIGHT[self.input_sat][ch]['slope']
-                offset = COEFFS_MET11_NIGHT[self.input_sat][ch]['offset']
-                self.transformed[ch] = self._apply_inverse_transform(
-                                                        slope,
-                                                        offset,
-                                                        self.transformed[ch])
-                if self.verbose:
-                    print('   >>> Inverse transformed {} with slope={:.4f} '
-                          'and offset={:.4f}'.format(ch, slope, offset))
+                if self.input_sat != 'ISCCP-NG':
+                    slope, offset = self._get_coeffs(ch, self.input_sat)
+                    self.transformed[ch] = self._apply_inverse_transform(
+                                                            slope,
+                                                            offset,
+                                                            self.transformed[ch])
+                    if self.verbose:
+                        print('   >>> Inverse transformed {} with slope={:.4f} '
+                              'and offset={:.4f}'.format(ch, slope, offset))
+                else:
+                   if self.isccpng_wmo_id is None:
+                        raise Exception('isccpng_wmo_id must be provided if '
+                                        'input_sat is ISCCP-NG')
+                   for sat_id in WMO_ID_MAPPING.keys():
+                       slope, offset = self._get_coeffs(ch, WMO_ID_MAPPING[sat_id])
+                       self.transformed[ch] = np.where(
+                                               self.isccpng_wmo_id == sat_id,
+                                               self._apply_inverse_transform(
+                                                           slope,
+                                                           offset,
+                                                           self.transformed[ch]
+                                                           ),
+                                               self.transformed[ch]                                                
+                                               )
+                                               
             else:
                 if self.verbose:
                     print('   >>> Channel {} not found in input_sat_data '
