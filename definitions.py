@@ -301,7 +301,7 @@ class ModelSetupMLAY:
                         '_LR-0001_NE-50_BS-200_GSICS_THEANO__1.0.4__v3.h5'
             else:
                 model = 'MODEL_MLAY_16_100_100_1_LOSS-BCE_OPT-ADAM' \
-                        '_LR-0001_NE-50_BS-200_GSICS_TF__2.4.1__v3.h5'
+                        '_LR-0001_NE-50_BS-200_GSICS_TF2__2.4.1__v3.h5'
 
             scaler = 'SCALER_MLAY_GSICS_v3.pkl'
 
