@@ -2,13 +2,12 @@ import prediction_funcs as preds
 import numpy as np
 import xarray as xr
 import sys
-
 import logging
-
 
 IFILE = 'seviri_ml_test_201907011200.nc'
 TESTPLOT = 'testfigure_seviri_ml.png'
 
+# read example netCDF file
 ds = xr.open_dataset(IFILE)
 
 # example data
@@ -26,14 +25,16 @@ lsm = ds['lsm'].data
 skt = ds['skt'].data
 solzen = ds['solzen'].data
 satzen = ds['satzen'].data
+
 print('---------------- CHECK CMA -----------------')
 cma = preds.predict_cma(vis006, vis008, ir016, ir039, ir062, ir073, 
                         ir082, ir108, ir120, ir134, lsm, skt, 
                         solzen=solzen, satzen=satzen, 
-                        undo_true_refl=False, correct_vis_cal_nasa_to_impf=0)
+                        undo_true_refl=False, 
+                        correct_vis_cal_nasa_to_impf=0)
 
 cldmask = cma[1]
-print('PYTHON3 CMA mean: ', np.mean(cma[1][cma[1] >= 0]))
+print('\nPYTHON3 CMA mean: ', np.mean(cma[1][cma[1] >= 0]), '\n')
 
 print('---------------- CHECK CPH WITH CLDMASK -----------------')
 cph = preds.predict_cph(vis006, vis008, ir016, ir039, ir062, ir073,
@@ -137,5 +138,6 @@ ax.set_title('MLAY uncertainty')
 plt.colorbar(ims)
 
 plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+
 plt.savefig(TESTPLOT)
 print('SAVED: ', TESTPLOT)

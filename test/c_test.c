@@ -30,9 +30,11 @@ int main() {
     bool undo_true_refl=false;
     float meanval;
 
+    /* Open netCDF file */
     if ((retval = nc_open(FILE_NAME, NC_NOWRITE, &ncid)))
         ERR(retval);
 
+    /* Get variable IDs*/
     if ((retval = nc_inq_varid(ncid, "VIS006", &vis006_id)))
         ERR(retval);
     if ((retval = nc_inq_varid(ncid, "VIS008", &vis008_id)))
@@ -62,6 +64,7 @@ int main() {
     if ((retval = nc_inq_varid(ncid, "satzen", &satzen_id)))
         ERR(retval);
 
+    /* Read variables */
     if ((retval = nc_get_var_float(ncid, vis006_id, &vis006[0][0])))
         ERR(retval);
     if ((retval = nc_get_var_float(ncid, vis008_id, &vis008[0][0])))
@@ -91,14 +94,17 @@ int main() {
     if ((retval = nc_get_var_float(ncid, satzen_id, &satzen[0][0])))
         ERR(retval);
 
+    /* Close netCDF file */
     if ((retval = nc_close(ncid)))
         ERR(retval);
 
+    /* Call SEVIRI_ML CMA network*/
     py_ann_cma(*vis006, *vis008, *ir_016, *ir_039, *ir_062, *ir_073, 
                *ir_087, *ir_108, *ir_120, *ir_134, *lsm, *skt, *solzen, 
                *satzen, &nx, &ny, *cot, *cma, *cma_unc, &msg_num, 
                &undo_true_refl);
 
+    /* Calculate arithmetic mean of CMA (cloud fraction) */
     int i, j, cnt;
     cnt = 0;
     for (i=0; i<nx; i++)

@@ -18,10 +18,10 @@ real(kind=4), dimension(:,:), pointer :: vis006, vis008, ir_016, &
                                          & ir_134, skt, satzen, solzen, &
                                          & cot, cma_unc
 integer(kind=1), dimension(:,:), pointer :: lsm, cma
-integer(kind=1) :: msg_num
+
+integer(kind=1) :: msg_num = 0
 logical(kind=1) :: undo_true_refl
 real(kind=4) :: meanval
-msg_num = 0
 
 allocate(vis006(nx, ny))
 allocate(vis008(nx, ny))
@@ -41,8 +41,10 @@ allocate(cot(nx, ny))
 allocate(cma(nx, ny))
 allocate(cma_unc(nx, ny))
 
+! Open netCDF file
 call check( nf90_open(FILE_NAME, NF90_NOWRITE, ncid) )
 
+! Get variable IDs
 call check( nf90_inq_varid(ncid, 'VIS006', vis006_id) )
 call check( nf90_inq_varid(ncid, 'VIS008', vis008_id) )
 call check( nf90_inq_varid(ncid, 'IR_016', ir_016_id) )
@@ -58,6 +60,7 @@ call check( nf90_inq_varid(ncid, 'skt', skt_id) )
 call check( nf90_inq_varid(ncid, 'solzen', solzen_id) )
 call check( nf90_inq_varid(ncid, 'satzen', satzen_id) )
 
+! Read variables
 call check( nf90_get_var(ncid, vis006_id, vis006) )
 call check( nf90_get_var(ncid, vis008_id, vis008) )
 call check( nf90_get_var(ncid, ir_016_id, ir_016) )
@@ -73,18 +76,20 @@ call check( nf90_get_var(ncid, skt_id, skt) )
 call check( nf90_get_var(ncid, solzen_id, solzen) )
 call check( nf90_get_var(ncid, satzen_id, satzen) )
 
+! Call SEVIRI_ML CMA network
 call seviri_ann_cma(nx, ny, vis006, vis008, ir_016, ir_039, &
                     ir_062, ir_073, ir_087, ir_108, ir_120, &
                     ir_134, lsm, skt, solzen, satzen, cot, &
                     cma, cma_unc, msg_num, undo_true_refl)
 
+! Calculate arithmeic CMA mean (cloud fraction)
 call get_mean(cma, meanval, nx, ny)
 write(*,*) " "
 write(*,*) " FORTRAN90 CMA mean: ", meanval
 write(*,*) " "
 
 contains
-
+    ! Handle netCDF exit codes
     subroutine check(status)
         integer, intent(in) :: status
     
@@ -94,7 +99,7 @@ contains
         end if
     end subroutine check
 
-
+    ! calcuate arithmetic mean of array
     subroutine get_mean(arr, meanval, nx, ny)
         real(kind=4), intent(inout) :: meanval
         integer :: nx, ny, cnt, i, j
