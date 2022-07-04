@@ -804,6 +804,147 @@ class ProcessorCTP(ProcessorBase):
                             'Percentile in the nn_driver.txt')
 
 
+class ProcessorCTT(ProcessorBase):
+    def __init__(self, data, undo_true_refl, correct_vis_cal_nasa_to_impf,
+                 cldmask, variable, opts):
+
+        self.undo_true_refl = undo_true_refl
+        self.do_correct_nasa_impf = correct_vis_cal_nasa_to_impf
+        self.cldmask = cldmask
+        self.variable = variable
+        self.opts = opts
+
+        self.models = None
+        self.estimate = None
+        self.uncertainty = None
+
+        # setup networks
+        self.networks = neuralnet.NetworkCTT(opts)
+        # get model version
+        self.model_version = self.networks.version
+        # get parameters corresponding to variable and model version
+        self.parameters = hf.get_parameters(self.model_version, variable)
+
+        # check if solzen is available if true refl should be removed
+        if undo_true_refl:
+            if data.solzen is None:
+                raise Exception(RuntimeError,
+                                'If undo_true_refl is true, '
+                                'solzen must not be None!')
+
+        # check if solzen and satzen are available if model version is 3
+        if self.model_version == 3:
+            if data.solzen is None or data.satzen is None:
+                raise Exception(RuntimeError,
+                                'If model version is 3, '
+                                'solzen and satzen must not be None! '
+                                'satzen is type {} and solzen '
+                                'is type {}'.format(type(data.satzen),
+                                                    type(data.solzen)))
+
+        super().__init__(data, self.networks, undo_true_refl,
+                         correct_vis_cal_nasa_to_impf, cldmask, variable)
+
+    def get_prediction(self):
+        # run data preparation
+        self.prepare_input_arrays()
+        # load HDF5 model
+        models = self.networks.get_model()
+        self.models = models
+
+        # select scaled data for correct variable
+        idata = self.scaled_data
+        # predict only pixels indices where all channels are valid
+        idata = idata[self.all_channels_valid_idxs, :]
+        # run prediction on valid pixels
+        prediction = np.squeeze(models['median'].predict(idata)).astype(SREAL)
+        # empty results array
+        pred = np.ones((self.xdim * self.ydim), dtype=SREAL) * SREAL_FILL_VALUE
+        # fill indices of predicted pixels with predicted value
+        pred[self.all_channels_valid_idxs] = prediction
+
+        if self.input_is_2d:
+            estimate = pred.reshape((self.xdim, self.ydim))
+        else:
+            estimate = pred
+
+        estimate = self._check_prediction(estimate)
+        if self.cldmask is not None:
+            estimate = np.where(self.cldmask == IS_CLEAR,
+                                SREAL_FILL_VALUE,
+                                estimate)
+        self.estimate = estimate
+        return estimate
+
+    def _check_prediction(self, data):
+        # mask pixels outside valid range
+        condition = np.logical_or(
+            data > self.parameters.VALID_CTT_REGRESSION_MAX,
+            data < self.parameters.VALID_CTT_REGRESSION_MIN
+            )
+        data = np.where(condition, SREAL_FILL_VALUE, data)
+
+        # mask pixels where all channels are invalid (i.e. space pixels)
+        data = np.where(self.all_channels_invalid == 1,
+                        SREAL_FILL_VALUE,
+                        data)
+        data = np.where(~np.isfinite(data),
+                        SREAL_FILL_VALUE,
+                        data)
+        return data
+
+    def get_uncertainty(self):
+        unc_method = self.opts['CTT_UNCERTAINTY_METHOD']
+        median = self.estimate
+        # quantile regression.
+        if unc_method.lower() in ['percentile', 'quantile', 'qrm']:
+            # select scaled data for correct variable
+            idata = self.scaled_data
+            # predict only pixels indices where all channels are valid
+            idata = idata[self.all_channels_valid_idxs, :]
+
+            # run lower and upper percentile prediction on valid pixels
+            prediction_lower = np.squeeze(self.models['lower'].predict(idata))
+            prediction_upper = np.squeeze(self.models['upper'].predict(idata))
+            prediction_lower = prediction_lower.astype(SREAL)
+            prediction_upper = prediction_upper.astype(SREAL)
+
+            # empty results array
+            p_lower = np.ones((self.xdim * self.ydim),
+                              dtype=SREAL) * SREAL_FILL_VALUE
+            p_upper = np.ones((self.xdim * self.ydim),
+                              dtype=SREAL) * SREAL_FILL_VALUE
+
+            # fill indices of predicted pixels with predicted values
+            p_lower[self.all_channels_valid_idxs] = prediction_lower
+            p_upper[self.all_channels_valid_idxs] = prediction_upper
+
+            if self.input_is_2d:
+                p_lower = p_lower.reshape((self.xdim, self.ydim))
+                p_upper = p_upper.reshape((self.xdim, self.ydim))
+
+            # mask invalid pixels and set correct fill values
+            p_lower = self._check_prediction(p_lower)
+            p_upper = self._check_prediction(p_upper)
+
+            # as the 1 sigma lower/upper interval is not symmetric
+            # we take the mean of upper and lower
+            lower_sigma = np.abs(p_lower - median)
+            upper_sigma = np.abs(p_upper - median)
+            mean_sigma = 0.5 * (lower_sigma + upper_sigma)
+            if self.cldmask is not None:
+                mean_sigma = np.where(self.cldmask == IS_CLEAR,
+                                      SREAL_FILL_VALUE,
+                                      mean_sigma)
+            self.uncertainty = mean_sigma
+            return mean_sigma
+        else:
+            raise Exception('No uncertainty method except prcentile '
+                            'regression implemented yet. '
+                            'Set CTP_UNCERTAINTY_METHOD to '
+                            'Percentile in the nn_driver.txt')
+
+
 class ProcessorMLAY(ProcessorBase):
     def __init__(self, data, undo_true_refl, correct_vis_cal_nasa_to_impf,
                  cldmask, variable, opts):

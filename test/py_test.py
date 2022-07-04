@@ -50,6 +50,13 @@ ctp = preds.predict_ctp(vis006, vis008, ir016, ir039, ir062, ir073,
                         undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
                         cldmask=cldmask)
 
+print('---------------- CHECK CTT WITH CLDMASK -----------------')
+ctt = preds.predict_ctt(vis006, vis008, ir016, ir039, ir062, ir073,
+                        ir082, ir108, ir120, ir134, lsm, skt,
+                        solzen=solzen, satzen=satzen,
+                        undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
+                        cldmask=cldmask)
+
 print('---------------- CHECK MLAY WITH CLDMASK -----------------')
 mlay = preds.predict_mlay(vis006, vis008, ir016, ir039, ir062, ir073,
                         ir082, ir108, ir120, ir134, lsm, skt,
@@ -73,6 +80,10 @@ cph_uncertainty = np.where(cph[2] <= 0, np.nan, cph[2])
 pressure = np.where(ctp[0] < 0, np.nan, ctp[0])
 ctp_uncertainty = np.where(ctp[1] <= 0, np.nan, ctp[1])
 
+temperature = np.where(ctt[0] < 0, np.nan, ctt[0])
+ctt_uncertainty = np.where(ctt[1] <= 0, np.nan, ctt[1])
+
+print(np.nanmin(temperature), np.nanmax(temperature))
 mlay_prediction = np.where(mlay[0] < 0, np.nan, mlay[0])
 mlay_flag = np.where(mlay[1] < 0, np.nan, mlay[1])
 mlay_uncertainty = np.where(mlay[2] <0, np.nan, mlay[2])
@@ -80,62 +91,76 @@ mlay_uncertainty = np.where(mlay[2] <0, np.nan, mlay[2])
 # -------------- PLOTTING ---------------
 IPROJ = ccrs.Geostationary()
 OPROJ = ccrs.Geostationary()
-fig = plt.figure(figsize=(13,10))
+fig = plt.figure(figsize=(13,9))
 
-ax = fig.add_subplot(431, projection=OPROJ)
+ax = fig.add_subplot(531, projection=OPROJ)
 ims = ax.imshow(cot_prediction, transform=IPROJ)
 ax.set_title('COT prediction')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(432, projection=OPROJ)
+ax = fig.add_subplot(532, projection=OPROJ)
 ims = ax.imshow(cldmask, transform=IPROJ, interpolation='none')
 ax.set_title('Binary CMA')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(433, projection=OPROJ)
+ax = fig.add_subplot(533, projection=OPROJ)
 ims = ax.imshow(cma_uncertainty, transform=IPROJ)
 ax.set_title('CMA uncertainty')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(434, projection=OPROJ)
+ax = fig.add_subplot(534, projection=OPROJ)
 ims = ax.imshow(cph_prediction, transform=IPROJ, interpolation='none')
 ax.set_title('CPH prediction')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(435, projection=OPROJ)
+ax = fig.add_subplot(535, projection=OPROJ)
 ims = ax.imshow(phase, transform=IPROJ, interpolation='none')
 ax.set_title('Binary CPH')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(436, projection=OPROJ)
+ax = fig.add_subplot(536, projection=OPROJ)
 ims = ax.imshow(cph_uncertainty, transform=IPROJ, interpolation='none')
 ax.set_title('CPH uncertainty')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(437, projection=OPROJ)
+ax = fig.add_subplot(537, projection=OPROJ)
 ims = ax.imshow(pressure, transform=IPROJ, interpolation='none')
 ax.set_title('CTP')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(438, projection=OPROJ)
+ax = fig.add_subplot(538, projection=OPROJ)
 ims = ax.imshow(ctp_uncertainty, transform=IPROJ, interpolation='none')
 ax.set_title('CTP uncertainty')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(4,3,10, projection=OPROJ)
+ax = fig.add_subplot(5,3,9, projection=OPROJ)
+
+ax = fig.add_subplot(5,3,10, projection=OPROJ)
 ims = ax.imshow(mlay_prediction, transform=IPROJ, interpolation='none')
 ax.set_title('MLAY prediction')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(4,3,11, projection=OPROJ)
+ax = fig.add_subplot(5,3,11, projection=OPROJ)
 ims = ax.imshow(mlay_flag, transform=IPROJ, interpolation='none')
 ax.set_title('MLAY flag')
 plt.colorbar(ims)
 
-ax = fig.add_subplot(4,3,12, projection=OPROJ)
+ax = fig.add_subplot(5,3,12, projection=OPROJ)
 ims = ax.imshow(mlay_uncertainty, transform=IPROJ, interpolation='none')
 ax.set_title('MLAY uncertainty')
 plt.colorbar(ims)
+
+ax = fig.add_subplot(5,3,13, projection=OPROJ)
+ims = ax.imshow(temperature, transform=IPROJ, interpolation='none')
+ax.set_title('CTT')
+plt.colorbar(ims)
+
+ax = fig.add_subplot(5,3,14, projection=OPROJ)
+ims = ax.imshow(ctt_uncertainty, transform=IPROJ, interpolation='none')
+ax.set_title('CTT uncertainty')
+plt.colorbar(ims)
+
+ax = fig.add_subplot(5,3,15, projection=OPROJ)
 
 plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 

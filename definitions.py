@@ -35,11 +35,13 @@ MANDATORY_OPTS = {'DATA_PATH': 'PATH',
                   'CMA_MODEL_VERSION': 'INT',
                   'CPH_MODEL_VERSION': 'INT',
                   'CTP_MODEL_VERSION': 'INT',
+                  'CTT_MODEL_VERSION': 'INT',
                   'MLAY_MODEL_VERSION': 'INT',
                   'CORRECT_IR039_OUT_OF_RANGE': 'BOOL',
                   'USE_THEANO_COMPILEDIR_LOCK': 'BOOL',
                   'USE_PID_COMPILEDIR': 'BOOL',
-                  'CTP_UNCERTAINTY_METHOD': 'STR'
+                  'CTP_UNCERTAINTY_METHOD': 'STR',
+                  'CTT_UNCERTAINTY_METHOD': 'STR'
                   }
 
 
@@ -117,6 +119,13 @@ class CTPVersion3Constants:
         # CTP regression value valid range
         self.VALID_CTP_REGRESSION_MIN = 0.
         self.VALID_CTP_REGRESSION_MAX = 1050.
+
+
+class CTTVersion3Constants:
+    def __init__(self):
+        # CTP regression value valid range
+        self.VALID_CTT_REGRESSION_MIN = 0.
+        self.VALID_CTT_REGRESSION_MAX = 400.
 
 
 class MLAYVersion3Constants:
@@ -269,6 +278,54 @@ class ModelSetupCTP:
         else:
             raise Exception('Version {:d} not supported '
                             'for CTP models.'.format(self.version))
+
+        self.model_lower_filepath = ojoin(self.data_path,
+                                          'v{:d}'.format(self.version),
+                                          low)
+        self.model_median_filepath = ojoin(self.data_path,
+                                           'v{:d}'.format(self.version),
+                                           med)
+        self.model_upper_filepath = ojoin(self.data_path,
+                                          'v{:d}'.format(self.version),
+                                          upp)
+        self.scaler_filepath = ojoin(self.data_path,
+                                     'v{:d}'.format(self.version),
+                                     scaler)
+
+
+class ModelSetupCTT:
+    def __init__(self, version, backend, data_path):
+        self.version = version
+        self.backend = backend
+        self.data_path = data_path
+
+        self.model_lower_filepath = None
+        self.model_upper_filepath = None
+        self.model_median_filepath = None
+        self.scaler_filepath = None
+
+    def set_models_scalers(self):
+        if self.version == 3:
+            if self.backend == 'THEANO':
+                low = 'MODEL_CTT_LOWER-0.1587_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v3.h5'
+                med = 'MODEL_CTT_MEDIAN-0.5000_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v3.h5'
+                upp = 'MODEL_CTT_UPPER-0.8413_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_THEANO__1.0.4__v3.h5'
+            else:
+                low = 'MODEL_CTT_LOWER-0.1587_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_TF2__2.4.1__v3.h5'
+                med = 'MODEL_CTT_MEDIAN-0.5000_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_TF2__2.4.1__v3.h5'
+                upp = 'MODEL_CTT_UPPER-0.8413_16_120_120_1_LOSS-QRM_OPT-ADAM'\
+                      '_LR-0001_NE-300_BS-200_GSICS_TF2__2.4.1__v3.h5'
+
+            scaler = 'SCALER_CTT_GSICS_v3.pkl'
+
+        else:
+            raise Exception('Version {:d} not supported '
+                            'for CTT models.'.format(self.version))
 
         self.model_lower_filepath = ojoin(self.data_path,
                                           'v{:d}'.format(self.version),

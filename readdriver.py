@@ -5,7 +5,7 @@ import pathlib
 from definitions import MANDATORY_OPTS
 from definitions import TRUE_OPTS, FALSE_OPTS
 from definitions import (ModelSetupCMA, ModelSetupCPH, ModelSetupCTP,
-                         ModelSetupMLAY)
+                         ModelSetupMLAY, ModelSetupCTT)
 
 
 def _set_default_filepath():
@@ -95,6 +95,11 @@ def parse_nn_driver(driver_path, backend):
                               opts['DATA_PATH'])
     ctp_setup.set_models_scalers()
 
+    ctt_setup = ModelSetupCTT(opts['CTT_MODEL_VERSION'],
+                              opts['BACKEND'],
+                              opts['DATA_PATH'])
+    ctt_setup.set_models_scalers()
+
     mlay_setup = ModelSetupMLAY(opts['MLAY_MODEL_VERSION'],
                                 opts['BACKEND'],
                                 opts['DATA_PATH'])
@@ -103,12 +108,20 @@ def parse_nn_driver(driver_path, backend):
     # set models to be used in options dictionary
     opts['CMA_MODEL_FILEPATH'] = cma_setup.model_filepath
     opts['CMA_SCALER_FILEPATH'] = cma_setup.scaler_filepath
+
     opts['CPH_MODEL_FILEPATH'] = cph_setup.model_filepath
     opts['CPH_SCALER_FILEPATH'] = cph_setup.scaler_filepath
+
     opts['CTP_LOWER_MODEL_FILEPATH'] = ctp_setup.model_lower_filepath
     opts['CTP_UPPER_MODEL_FILEPATH'] = ctp_setup.model_upper_filepath
     opts['CTP_MEDIAN_MODEL_FILEPATH'] = ctp_setup.model_median_filepath
     opts['CTP_SCALER_FILEPATH'] = ctp_setup.scaler_filepath
+
+    opts['CTT_LOWER_MODEL_FILEPATH'] = ctt_setup.model_lower_filepath
+    opts['CTT_UPPER_MODEL_FILEPATH'] = ctt_setup.model_upper_filepath
+    opts['CTT_MEDIAN_MODEL_FILEPATH'] = ctt_setup.model_median_filepath
+    opts['CTT_SCALER_FILEPATH'] = ctt_setup.scaler_filepath
+
     opts['MLAY_MODEL_FILEPATH'] = mlay_setup.model_filepath
     opts['MLAY_SCALER_FILEPATH'] = mlay_setup.scaler_filepath
 

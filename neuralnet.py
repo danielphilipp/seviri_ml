@@ -65,7 +65,7 @@ class NetworkBase:
         else:
             _throw_backend_not_found_error(self.backend)
 
-        # for CTP we need 3 models to get uncertainty
+        # for CTP and CTT we need 3 models to get uncertainty
         if isinstance(self.modelpath, list):
             models = dict()
             names = ['lower', 'median', 'upper']
@@ -153,6 +153,27 @@ class NetworkCTP(NetworkBase):
         backend = opts['BACKEND']
 
         self.version = opts['CTP_MODEL_VERSION']
+
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpaths[1])
+        else:
+            hf.check_tensorflow_version(modelpaths[1])
+
+        super().__init__(modelpaths, scalerpath, backend)
+
+
+class NetworkCTT(NetworkBase):
+    def __init__(self, opts):
+
+        self.opts = opts
+
+        modelpaths = [opts['CTT_LOWER_MODEL_FILEPATH'],
+                      opts['CTT_MEDIAN_MODEL_FILEPATH'],
+                      opts['CTT_UPPER_MODEL_FILEPATH']]
+        scalerpath = opts['CTT_SCALER_FILEPATH']
+        backend = opts['BACKEND']
+
+        self.version = opts['CTT_MODEL_VERSION']
 
         if backend == 'THEANO':
             hf.check_theano_version(modelpaths[1])
