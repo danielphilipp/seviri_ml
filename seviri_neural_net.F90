@@ -342,7 +342,7 @@ subroutine seviri_ann_ctt(nx, ny, vis006, vis008, nir016, ir039, ir062, ir073, &
     logical(kind=1) :: undo_true_reflectances
 
     ! Call Python neural network via Python C-API
-    call py_ann_ctp(c_loc(vis006(1,1)), c_loc(vis008(1,1)),c_loc(nir016(1,1)), &
+    call py_ann_ctt(c_loc(vis006(1,1)), c_loc(vis008(1,1)),c_loc(nir016(1,1)), &
                     c_loc(ir039(1,1)), c_loc(ir062(1,1)), c_loc(ir073(1,1)), &
                     c_loc(ir087(1,1)), c_loc(ir108(1,1)), c_loc(ir120(1,1)), &
                     c_loc(ir134(1,1)), c_loc(lsm(1,1)), c_loc(skt(1,1)), &
