@@ -7,9 +7,14 @@ Machine learning based module to retrieve a set of cloud variables from Spinning
 
 - Cloud Top Pressure (CTP) - prediction_funcs.predict_ctp()
 
+- Cloud Top Temperature (CTT) - prediction_funcs.predict_ctt()
+
 - Multilayer Flag (MLAY) - prediction_funcs.predict_mlay()
 
-The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
+
+The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP, CTT and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
+
+Additionally, a neural network was trained to derive a MODIS-like true colour RGB image from SEVIRI measurements (/modis_like_rgb). The network was trained against MODIS MOD_143D_RR/MYD_143D_RR true colour RGB values using the time information from the MOD09CMG/MYD09CMG product. 
 
 REQUIREMENTS
 -------------------------------------------
