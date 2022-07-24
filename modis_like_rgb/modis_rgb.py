@@ -21,7 +21,6 @@ MYD09CMG v6.1: https://lpdaac.usgs.gov/products/myd09cmgv061/
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from keras.models import load_model
 import PIL
 import os
 import seviri_ml.helperfuncs as hf
@@ -50,9 +49,11 @@ class ModisLikeRGB():
                                   'SCALER_MODIS-LIKE_RGB_v1.pkl')
 
         if backend == 'THEANO':
+            from keras.models import load_model
             self.model_file = os.path.join(path, 
                                   'MODEL_MODIS-LIKE_RGB_THEANO__1.0.4__v1.h5')
         elif backend == 'TENSORFLOW2':
+            from tensorflow.keras.models import load_model
             self.model_file = os.path.join(path,
                                   'MODEL_MODIS-LIKE_RGB_TF2__2.4.1__v1.h5')            
 
