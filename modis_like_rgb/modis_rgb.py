@@ -23,11 +23,18 @@ import matplotlib.pyplot as plt
 import joblib
 import PIL
 import os
+import dask
 import seviri_ml.helperfuncs as hf
 
 
 # set backend name from environment variable
 backend = hf.get_backend_name(os.environ.get('SEVIRI_ML_BACKEND'))
+
+if backend == 'THEANO':
+    from keras.models import load_model
+elif backend == 'TENSORFLOW2':
+    from tensorflow.keras.models import load_model
+
 
 class ModisLikeRGB():
     def __init__(self, vis006, vis008, ir_016, 
@@ -47,13 +54,10 @@ class ModisLikeRGB():
 
         self.scaler_file = self.scaler_file = os.path.join(path,
                                   'SCALER_MODIS-LIKE_RGB_v1.pkl')
-
         if backend == 'THEANO':
-            from keras.models import load_model
             self.model_file = os.path.join(path, 
                                   'MODEL_MODIS-LIKE_RGB_THEANO__1.0.4__v1.h5')
         elif backend == 'TENSORFLOW2':
-            from tensorflow.keras.models import load_model
             self.model_file = os.path.join(path,
                                   'MODEL_MODIS-LIKE_RGB_TF2__2.4.1__v1.h5')            
 
@@ -130,7 +134,7 @@ class ModisLikeRGB():
 
         return rgb
 
-    def save_to_png(self, filename='modis-like_ann_rgb.png'):
+    def save_to_png(self, filename='modis-like_ann_rgb.png', img_size=None):
         """ Save RGB to a full-frame PNG image."""
 
         if self.rgb is None:
@@ -139,8 +143,24 @@ class ModisLikeRGB():
         else:
             if not filename.endswith('.png'):
                 raise Exception('Please save image as .png')
+            if isinstance(self.rgb, dask.array.core.Array):
+                rgb = np.array(self.rgb)
+            else:
+                rgb = self.rgb
+            
+            if rgb.dtype == np.float32:
+                rgb *= 255.
+                rgb = np.clip(rgb, 0, 255).astype(np.uint8)
+ 
+            img = PIL.Image.fromarray(rgb)
 
-            img = PIL.Image.fromarray(self.rgb)
+            if img_size is not None:
+                if isinstance(img_size, tuple):
+                    img = img.resize(img_size)
+                else:
+                    raise Exception('If providing img_size it has to be a tuple: ' \
+                                    '(num_x_pixel, num_y_pixel)')
+
             img.save(filename)
 
     def show(self):
