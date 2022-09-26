@@ -162,7 +162,7 @@ class ProcessorBase:
             has_invalid_item = has_invalid_item.reshape((self.xdim, self.ydim))
 
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
-            if self.variable in ['CMA', 'CPH', 'MLAY']:
+            if self.variable in ['CMA', 'CPH', 'MLAY', 'CTP', 'CTT']:
                 # check if all channels are valid and ir039 invalid
                 # list of all channels except 039
                 all_chs_exc_039 = np.array(
@@ -188,6 +188,7 @@ class ProcessorBase:
                 self.n_ir039_invalid = np.sum(self.ir039_invalid)
                 logging.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
+                    
         all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
                             self.data.ir087, self.data.ir108, self.data.ir120,
                             self.data.ir134, self.data.ir062, self.data.ir073])
@@ -212,6 +213,12 @@ class ProcessorBase:
 
         self.scaled_data = self.networks.scale_input(idata)
 
+        if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
+            # if CTP or CTT replace invalid 3.9 pixel BT with 10.8B BT
+            if self.variable in ['CTP', 'CTT']:
+                self.scaled_data[:, 0] = np.where(self.ir039_invalid.ravel() == 1,
+                                                  self.scaled_data[:, 3],
+                                                  self.scaled_data[:, 0])
 
 class InputData:
     def __init__(self, vis006, vis008, nir016, ir039, ir062, ir073, ir087,
