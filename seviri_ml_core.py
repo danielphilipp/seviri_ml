@@ -214,7 +214,7 @@ class ProcessorBase:
         self.scaled_data = self.networks.scale_input(idata)
 
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
-            # if CTP or CTT replace invalid 3.9 pixel BT with 10.8B BT
+            # if CTP or CTT replace invalid 3.9 pixel BT with 10.8 BT
             if self.variable in ['CTP', 'CTT']:
                 self.scaled_data[:, 0] = np.where(self.ir039_invalid.ravel() == 1,
                                                   self.scaled_data[:, 3],
