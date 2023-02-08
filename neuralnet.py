@@ -181,3 +181,24 @@ class NetworkCTT(NetworkBase):
             hf.check_tensorflow_version(modelpaths[1])
 
         super().__init__(modelpaths, scalerpath, backend)
+
+
+class NetworkCBH(NetworkBase):
+    def __init__(self, opts):
+
+        self.opts = opts
+
+        modelpaths = [opts['CBH_LOWER_MODEL_FILEPATH'],
+                      opts['CBH_MEDIAN_MODEL_FILEPATH'],
+                      opts['CBH_UPPER_MODEL_FILEPATH']]
+        scalerpath = opts['CBH_SCALER_FILEPATH']
+        backend = opts['BACKEND']
+
+        self.version = opts['CBH_MODEL_VERSION']
+
+        if backend == 'THEANO':
+            hf.check_theano_version(modelpaths[1])
+        else:
+            hf.check_tensorflow_version(modelpaths[1])
+
+        super().__init__(modelpaths, scalerpath, backend)

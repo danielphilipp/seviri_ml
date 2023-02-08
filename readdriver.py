@@ -5,7 +5,7 @@ import pathlib
 from definitions import MANDATORY_OPTS
 from definitions import TRUE_OPTS, FALSE_OPTS
 from definitions import (ModelSetupCMA, ModelSetupCPH, ModelSetupCTP,
-                         ModelSetupMLAY, ModelSetupCTT)
+                         ModelSetupMLAY, ModelSetupCTT, ModelSetupCBH)
 
 
 def _set_default_filepath():
@@ -105,6 +105,11 @@ def parse_nn_driver(driver_path, backend):
                                 opts['DATA_PATH'])
     mlay_setup.set_models_scalers()
 
+    cbh_setup = ModelSetupCBH(opts['CBH_MODEL_VERSION'],
+                              opts['BACKEND'],
+                              opts['DATA_PATH'])
+    cbh_setup.set_models_scalers()
+
     # set models to be used in options dictionary
     opts['CMA_MODEL_FILEPATH'] = cma_setup.model_filepath
     opts['CMA_SCALER_FILEPATH'] = cma_setup.scaler_filepath
@@ -121,6 +126,11 @@ def parse_nn_driver(driver_path, backend):
     opts['CTT_UPPER_MODEL_FILEPATH'] = ctt_setup.model_upper_filepath
     opts['CTT_MEDIAN_MODEL_FILEPATH'] = ctt_setup.model_median_filepath
     opts['CTT_SCALER_FILEPATH'] = ctt_setup.scaler_filepath
+
+    opts['CBH_LOWER_MODEL_FILEPATH'] = cbh_setup.model_lower_filepath
+    opts['CBH_UPPER_MODEL_FILEPATH'] = cbh_setup.model_upper_filepath
+    opts['CBH_MEDIAN_MODEL_FILEPATH'] = cbh_setup.model_median_filepath
+    opts['CBH_SCALER_FILEPATH'] = cbh_setup.scaler_filepath
 
     opts['MLAY_MODEL_FILEPATH'] = mlay_setup.model_filepath
     opts['MLAY_SCALER_FILEPATH'] = mlay_setup.scaler_filepath

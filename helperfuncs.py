@@ -9,6 +9,7 @@ from definitions import CMACPHVersion2Constants
 from definitions import CMACPHVersion3Constants
 from definitions import CTPVersion3Constants
 from definitions import CTTVersion3Constants
+from definitions import CBHVersion3Constants
 from definitions import MLAYVersion3Constants
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
@@ -69,6 +70,13 @@ def get_parameters(version, variable):
         if version == 3:
             logging.info('Loading version 3 constants')
             return MLAYVersion3Constants()
+        else:
+            raise Exception('No constants defined for version '
+                            '{}'.format(version))
+    elif variable == 'CBH':
+        if version == 3:
+            logging.info('Loading version 3 constants')
+            return CBHVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))

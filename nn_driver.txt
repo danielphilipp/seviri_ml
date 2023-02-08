@@ -11,6 +11,7 @@ CMA_MODEL_VERSION = 3
 CPH_MODEL_VERSION = 3
 CTP_MODEL_VERSION = 3
 CTT_MODEL_VERSION = 3
+CBH_MODEL_VERSION = 3
 MLAY_MODEL_VERSION = 3
 
 ###############################################################################
@@ -43,3 +44,4 @@ USE_PID_COMPILEDIR = False
 ################################################################################
 CTP_UNCERTAINTY_METHOD = Quantile
 CTT_UNCERTAINTY_METHOD = Quantile
+CBH_UNCERTAINTY_METHOD = Quantile

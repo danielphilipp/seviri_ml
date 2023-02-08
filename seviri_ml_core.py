@@ -58,15 +58,17 @@ class ProcessorBase:
         vis008p[vis008p < 0] = 0
         nir016p[nir016p < 0] = 0
 
-        # multiply reflectances by 100 to convert from 0-1
-        # to 0-100 range as training data. Satpy outputs
-        # 0-100 whereas SEVIRI util outputs 0-1.
-        vis006p = vis006p * 100.
-        vis008p = vis008p * 100.
-        nir016p = nir016p * 100.
+        if self.variable != 'CBH':
+            # multiply reflectances by 100 to convert from 0-1
+            # to 0-100 range as training data. Satpy outputs
+            # 0-100 whereas SEVIRI util outputs 0-1.
+            vis006p = vis006p * 100.
+            vis008p = vis008p * 100.
+            nir016p = nir016p * 100.
 
-        # change fill value of skt from >> 1000 to SREAL_FILL_VALUE
-        skt = np.where(self.data.skt > 1000, SREAL_FILL_VALUE, self.data.skt)
+        if self.data.skt is not None:
+            # change fill value of skt from >> 1000 to SREAL_FILL_VALUE
+            skt = np.where(self.data.skt > 1000, SREAL_FILL_VALUE, self.data.skt)
 
         # remove true reflectances
         if self.undo_true_refl:
@@ -80,9 +82,11 @@ class ProcessorBase:
         else:
             logging.info('Not removing true reflectances')
 
-        # calculate channel differences
-        ir087_108 = self.data.ir087 - self.data.ir108
-        ir108_120 = self.data.ir108 - self.data.ir120
+        if self.data.ir087 is not None and self.data.ir108 is not None and \
+           self.data.ir120 is not None:
+            # calculate channel differences
+            ir087_108 = self.data.ir087 - self.data.ir108
+            ir108_120 = self.data.ir108 - self.data.ir120
 
         if self.model_version in [1, 2]:
             # list of arrays must be kept in this order!
@@ -103,25 +107,31 @@ class ProcessorBase:
                 self.data.ir073   # 14
             ]
         elif self.model_version == 3:
-            # list of arrays must be kept in this order!
-            data_lst = [
-                self.data.ir039,   # 1
-                self.data.ir087,   # 2
-                ir087_108,         # 3
-                self.data.ir108,   # 4
-                ir108_120,         # 5
-                self.data.ir120,   # 6
-                self.data.ir134,   # 7
-                self.data.lsm,     # 8
-                nir016p,           # 9
-                self.data.satzen,  # 10
-                skt,               # 11
-                self.data.solzen,  # 12
-                vis006p,           # 13
-                vis008p,           # 14
-                self.data.ir062,   # 15
-                self.data.ir073    # 16
-            ]
+            if self.variable == 'CBH':
+                # list must be kept in order
+                data_lst = [vis006p, vis008p, nir016p, self.data.ir108,
+                            self.data.ir120, self.data.ir134, self.data.satzen, 
+                            self.data.solzen]
+            else:
+                # list of arrays must be kept in this order!
+                data_lst = [
+                    self.data.ir039,   # 1
+                    self.data.ir087,   # 2
+                    ir087_108,         # 3
+                    self.data.ir108,   # 4
+                    ir108_120,         # 5
+                    self.data.ir120,   # 6
+                    self.data.ir134,   # 7
+                    self.data.lsm,     # 8
+                    nir016p,           # 9
+                    self.data.satzen,  # 10
+                    skt,               # 11
+                    self.data.solzen,  # 12
+                    vis006p,           # 13
+                    vis008p,           # 14
+                    self.data.ir062,   # 15
+                    self.data.ir073    # 16
+                ]
         else:
             msg = 'Model version {} invalid. Allowed are ' \
                   '1, 2 and 3.'.format(self.model_version)
@@ -162,7 +172,7 @@ class ProcessorBase:
             has_invalid_item = has_invalid_item.reshape((self.xdim, self.ydim))
 
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
-            if self.variable in ['CMA', 'CPH', 'MLAY']:
+            if self.variable in ['CMA', 'CPH', 'MLAY', 'CTP', 'CTT']:
                 # check if all channels are valid and ir039 invalid
                 # list of all channels except 039
                 all_chs_exc_039 = np.array(
@@ -188,9 +198,13 @@ class ProcessorBase:
                 self.n_ir039_invalid = np.sum(self.ir039_invalid)
                 logging.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
-        all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
-                            self.data.ir087, self.data.ir108, self.data.ir120,
-                            self.data.ir134, self.data.ir062, self.data.ir073])
+        if self.variable == 'CBH':
+            all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir108, 
+                                self.data.ir120, self.data.ir134])
+        else:
+            all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
+                                self.data.ir087, self.data.ir108, self.data.ir120,
+                                self.data.ir134, self.data.ir062, self.data.ir073])
 
         # pixels with all IR channels invalid = 1, else 0 (as VIS can be
         # at night
@@ -212,10 +226,19 @@ class ProcessorBase:
 
         self.scaled_data = self.networks.scale_input(idata)
 
+        if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
+            # if CTP or CTT replace invalid 3.9 pixel BTs with 10.8 BTs
+            if self.variable in ['CTP', 'CTT']:
+                self.scaled_data[:, 0] = np.where(self.ir039_invalid.ravel() == 1,
+                                                  self.scaled_data[:, 3],
+                                                  self.scaled_data[:, 0])
+
 
 class InputData:
-    def __init__(self, vis006, vis008, nir016, ir039, ir062, ir073, ir087,
-                 ir108, ir120, ir134, lsm, skt, solzen, satzen):
+    def __init__(self, vis006=None, vis008=None, nir016=None, 
+                 ir039=None, ir062=None, ir073=None, ir087=None,
+                 ir108=None, ir120=None, ir134=None, lsm=None, 
+                 skt=None, solzen=None, satzen=None):
         self.vis006 = vis006
         self.vis008 = vis008
         self.nir016 = nir016
@@ -942,6 +965,148 @@ class ProcessorCTT(ProcessorBase):
             raise Exception('No uncertainty method except prcentile '
                             'regression implemented yet. '
                             'Set CTP_UNCERTAINTY_METHOD to '
+                            'Percentile in the nn_driver.txt')
+
+
+class ProcessorCBH(ProcessorBase):
+    def __init__(self, data, undo_true_refl, correct_vis_cal_nasa_to_impf,
+                 cldmask, variable, opts):
+
+        self.undo_true_refl = undo_true_refl
+        self.do_correct_nasa_impf = correct_vis_cal_nasa_to_impf
+        self.cldmask = cldmask
+        self.variable = variable
+        self.opts = opts
+
+        self.models = None
+        self.estimate = None
+        self.uncertainty = None
+
+        # setup networks
+        self.networks = neuralnet.NetworkCBH(opts)
+        # get model version
+        self.model_version = self.networks.version
+        # get parameters corresponding to variable and model version
+        self.parameters = hf.get_parameters(self.model_version, variable)
+
+        # check if solzen is available if true refl should be removed
+        if undo_true_refl:
+            if data.solzen is None:
+                raise Exception(RuntimeError,
+                                'If undo_true_refl is true, '
+                                'solzen must not be None!')
+
+        # check if solzen and satzen are available if model version is 3
+        if self.model_version == 3:
+            if data.solzen is None or data.satzen is None:
+                raise Exception(RuntimeError,
+                                'If model version is 3, '
+                                'solzen and satzen must not be None! '
+                                'satzen is type {} and solzen '
+                                'is type {}'.format(type(data.satzen),
+                                                    type(data.solzen)))
+
+        super().__init__(data, self.networks, undo_true_refl,
+                         correct_vis_cal_nasa_to_impf, cldmask, variable)
+
+    def get_prediction(self):
+        # run data preparation
+        self.prepare_input_arrays()
+        # load HDF5 model
+        models = self.networks.get_model()
+        self.models = models
+
+        # select scaled data for correct variable
+        idata = self.scaled_data
+        # predict only pixels indices where all channels are valid
+        idata = idata[self.all_channels_valid_idxs, :]
+        # run prediction on valid pixels
+        prediction = np.squeeze(models['median'].predict(idata)).astype(SREAL)
+        # empty results array
+        pred = np.ones((self.xdim * self.ydim), dtype=SREAL) * SREAL_FILL_VALUE
+        # fill indices of predicted pixels with predicted value
+        pred[self.all_channels_valid_idxs] = prediction
+
+        if self.input_is_2d:
+            estimate = pred.reshape((self.xdim, self.ydim))
+        else:
+            estimate = pred
+
+        estimate = self._check_prediction(estimate)
+        if self.cldmask is not None:
+            estimate = np.where(self.cldmask == IS_CLEAR,
+                                SREAL_FILL_VALUE,
+                                estimate)
+        self.estimate = estimate
+        return estimate
+
+    def _check_prediction(self, data):
+        # mask pixels outside valid range
+        condition = np.logical_or(
+            data > self.parameters.VALID_CBH_REGRESSION_MAX,
+            data < self.parameters.VALID_CBH_REGRESSION_MIN
+            )
+        data = np.where(condition, SREAL_FILL_VALUE, data)
+
+        # mask pixels where all channels are invalid (i.e. space pixels)
+        data = np.where(self.all_channels_invalid == 1,
+                        SREAL_FILL_VALUE,
+                        data)
+        data = np.where(~np.isfinite(data),
+                        SREAL_FILL_VALUE,
+                        data)
+        return data
+
+    def get_uncertainty(self):
+        unc_method = self.opts['CBH_UNCERTAINTY_METHOD']
+        median = self.estimate
+        # quantile regression.
+        if unc_method.lower() in ['percentile', 'quantile', 'qrm']:
+            # select scaled data for correct variable
+            idata = self.scaled_data
+            # predict only pixels indices where all channels are valid
+            idata = idata[self.all_channels_valid_idxs, :]
+
+            # run lower and upper percentile prediction on valid pixels
+            prediction_lower = np.squeeze(self.models['lower'].predict(idata))
+            prediction_upper = np.squeeze(self.models['upper'].predict(idata))
+            prediction_lower = prediction_lower.astype(SREAL)
+            prediction_upper = prediction_upper.astype(SREAL)
+
+            # empty results array
+            p_lower = np.ones((self.xdim * self.ydim),
+                              dtype=SREAL) * SREAL_FILL_VALUE
+            p_upper = np.ones((self.xdim * self.ydim),
+                              dtype=SREAL) * SREAL_FILL_VALUE
+
+            # fill indices of predicted pixels with predicted values
+            p_lower[self.all_channels_valid_idxs] = prediction_lower
+            p_upper[self.all_channels_valid_idxs] = prediction_upper
+
+            if self.input_is_2d:
+                p_lower = p_lower.reshape((self.xdim, self.ydim))
+                p_upper = p_upper.reshape((self.xdim, self.ydim))
+
+            # mask invalid pixels and set correct fill values
+            p_lower = self._check_prediction(p_lower)
+            p_upper = self._check_prediction(p_upper)
+
+            # as the 1 sigma lower/upper interval is not symmetric
+            # we take the mean of upper and lower
+            lower_sigma = np.abs(p_lower - median)
+            upper_sigma = np.abs(p_upper - median)
+            mean_sigma = 0.5 * (lower_sigma + upper_sigma)
+            if self.cldmask is not None:
+                mean_sigma = np.where(self.cldmask == IS_CLEAR,
+                                      SREAL_FILL_VALUE,
+                                      mean_sigma)
+            self.uncertainty = mean_sigma
+            return mean_sigma
+
+        else:
+            raise Exception('No uncertainty method except prcentile '
+                            'regression implemented yet. '
+                            'Set CBH_UNCERTAINTY_METHOD to '
                             'Percentile in the nn_driver.txt')
 
 
