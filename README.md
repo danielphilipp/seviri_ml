@@ -11,6 +11,8 @@ Machine learning based module to retrieve a set of cloud variables from Spinning
 
 - Multilayer Flag (MLAY) - prediction_funcs.predict_mlay()
 
+- Cloud Base Height (CBH) - prediction_funcs.predict_cbh()
+
 
 The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP, CTT and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
 
