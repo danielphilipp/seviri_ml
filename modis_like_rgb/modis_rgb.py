@@ -36,7 +36,7 @@ elif backend == 'TENSORFLOW2':
     from tensorflow.keras.models import load_model
 
 
-class ModisLikeRGB():
+class ModisLikeRGB:
     def __init__(self, vis006, vis008, ir_016, 
                  ir_108, ir_134, sza):
         self.vis006 = vis006

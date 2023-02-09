@@ -205,7 +205,7 @@ class ProcessorBase:
             all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
                                 self.data.ir087, self.data.ir108, self.data.ir120,
                                 self.data.ir134, self.data.ir062, self.data.ir073])
-
+                    
         # pixels with all IR channels invalid = 1, else 0 (as VIS can be
         # at night
         all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
@@ -227,7 +227,7 @@ class ProcessorBase:
         self.scaled_data = self.networks.scale_input(idata)
 
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
-            # if CTP or CTT replace invalid 3.9 pixel BTs with 10.8 BTs
+            # if CTP or CTT replace invalid 3.9 pixel BT with 10.8 BT
             if self.variable in ['CTP', 'CTT']:
                 self.scaled_data[:, 0] = np.where(self.ir039_invalid.ravel() == 1,
                                                   self.scaled_data[:, 3],
