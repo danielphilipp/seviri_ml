@@ -60,9 +60,7 @@ ctt = preds.predict_ctt(vis006, vis008, ir016, ir039, ir062, ir073,
                         cldmask=cldmask)
 
 print('---------------- CHECK CBH WITH CLDMASK -----------------')
-cbh = preds.predict_cbh(vis006, vis008, ir016, ir108, ir120, ir134,
-                        solzen=solzen, satzen=satzen, undo_true_refl=False, 
-                        correct_vis_cal_nasa_to_impf=0, cldmask=cldmask)
+cbh = preds.predict_cbh(ir108, ir120, ir134, solzen=solzen, satzen=satzen, cldmask=cldmask)
 
 print('---------------- CHECK MLAY WITH CLDMASK -----------------')
 mlay = preds.predict_mlay(vis006, vis008, ir016, ir039, ir062, ir073,

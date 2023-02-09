@@ -467,10 +467,8 @@ void py_ann_ctt(void *vis006, void *vis008, void *nir016, void *ir039,
 }
 
 
-void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
-                void *ir120, void *ir134, void *solzen, void *satzen, 
-		int *nx, int *ny, float *reg_cbh, float *unc_cbh, 
-		void *cldmask, char *msg_index, bool *undo_true_reflectances)
+void py_ann_cbh(void *ir108, void *ir120, void *ir134, void *solzen, void *satzen, 
+		int *nx, int *ny, float *reg_cbh, float *unc_cbh, void *cldmask)
 {
     //initialize Python interpreter
     if (!Py_IsInitialized()){
@@ -486,16 +484,8 @@ void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
     dims[0] = *nx;
     dims[1] = *ny;
 
-    PyObject *undo_true_refl_py;
-    if (*undo_true_reflectances){
-        undo_true_refl_py = Py_True;
-    } else {
-        undo_true_refl_py = Py_False;
-    }
-
-    PyObject *msg_index_py = Py_BuildValue("b", *msg_index);
     PyObject *mName, *pModule, *pFunc, *args_var;
-    PyObject *vis006py, *vis008py, *nir016py, *ir108py, *ir120py, *ir134py;
+    PyObject *ir108py, *ir120py, *ir134py;
     PyObject *solzenpy, *satzenpy, *cldmaskpy;
     PyObject *res;
 
@@ -507,9 +497,6 @@ void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
 
         if (PyCallable_Check(pFunc)){
             // create numpy arrays from C array
-            vis006py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, vis006);
-            vis008py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, vis008);
-            nir016py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, nir016);
             ir108py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, ir108);
             ir120py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, ir120);
             ir134py = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, ir134);
@@ -517,9 +504,6 @@ void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
             satzenpy = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, satzen);
             cldmaskpy = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, cldmask);
 
-            PyArray_ENABLEFLAGS((PyArrayObject*) vis006py, NPY_ARRAY_OWNDATA);
-            PyArray_ENABLEFLAGS((PyArrayObject*) vis008py, NPY_ARRAY_OWNDATA);
-            PyArray_ENABLEFLAGS((PyArrayObject*) nir016py, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) ir108py, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) ir120py, NPY_ARRAY_OWNDATA);
             PyArray_ENABLEFLAGS((PyArrayObject*) ir134py, NPY_ARRAY_OWNDATA);
@@ -528,9 +512,8 @@ void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
             PyArray_ENABLEFLAGS((PyArrayObject*) cldmaskpy, NPY_ARRAY_OWNDATA);
 
           // generate args tuple for function call
-            args_var = PyTuple_Pack(11, vis006py, vis008py, nir016py, ir108py, ir120py,
-                                    ir134py, solzenpy, satzenpy, undo_true_refl_py, 
-				    msg_index_py, cldmaskpy);
+            args_var = PyTuple_Pack(6, ir108py, ir120py, ir134py, solzenpy, 
+			            satzenpy, cldmaskpy);
 
             // call python function for COT
             res = PyObject_CallObject(pFunc, args_var);
@@ -561,9 +544,6 @@ void py_ann_cbh(void *vis006, void *vis008, void *nir016, void *ir108,
                 // decrement reference counter of this objects
                 Py_DECREF(pFunc);
                 Py_DECREF(pModule);
-                Py_DECREF(vis006py);
-                Py_DECREF(vis008py);
-                Py_DECREF(nir016py);
                 Py_DECREF(ir108py);
                 Py_DECREF(ir120py);
                 Py_DECREF(ir134py);

@@ -33,12 +33,13 @@ class ProcessorBase:
         self.scaled_data = None
 
     def prepare_input_arrays(self):
-        # set reflectances below 0 to 0
-        vis006p = self.data.vis006.copy()
-        vis008p = self.data.vis008.copy()
-        nir016p = self.data.nir016.copy()
+        if self.variable != 'CBH':
+            # set reflectances below 0 to 0
+            vis006p = self.data.vis006.copy()
+            vis008p = self.data.vis008.copy()
+            nir016p = self.data.nir016.copy()
 
-        if self.do_correct_nasa_impf in [1, 2, 3, 4]:
+        if self.do_correct_nasa_impf in [1, 2, 3, 4] and self.variable != 'CBH':
             logging.info('Correcting VIS calibration from NASA to '
                          'IMPF for MSG{:d}'.format(self.do_correct_nasa_impf))
 
@@ -46,7 +47,7 @@ class ProcessorBase:
                                   self.do_correct_nasa_impf)
             vis006p, vis008p, nir016p = c
 
-        elif self.do_correct_nasa_impf == 0:
+        elif self.do_correct_nasa_impf == 0 or self.variable == 'CBH':
             logging.info('Not correcting VIS calibration from NASA to IMPF.')
         else:
             logging.info('correct_vis_cal_nasa_to_impf value {} '
@@ -54,11 +55,11 @@ class ProcessorBase:
                          'calibration from NASA to '
                          'IMPF.'.format(self.do_correct_nasa_impf))
 
-        vis006p[vis006p < 0] = 0
-        vis008p[vis008p < 0] = 0
-        nir016p[nir016p < 0] = 0
-
         if self.variable != 'CBH':
+            vis006p[vis006p < 0] = 0
+            vis008p[vis008p < 0] = 0
+            nir016p[nir016p < 0] = 0
+
             # multiply reflectances by 100 to convert from 0-1
             # to 0-100 range as training data. Satpy outputs
             # 0-100 whereas SEVIRI util outputs 0-1.
@@ -71,7 +72,7 @@ class ProcessorBase:
             skt = np.where(self.data.skt > 1000, SREAL_FILL_VALUE, self.data.skt)
 
         # remove true reflectances
-        if self.undo_true_refl:
+        if self.undo_true_refl and self.variable != 'CBH':
             logging.info('Removing true reflectances')
             cond = np.logical_and(self.data.solzen >= 0.,
                                   self.data.solzen < 90.)
@@ -109,9 +110,11 @@ class ProcessorBase:
         elif self.model_version == 3:
             if self.variable == 'CBH':
                 # list must be kept in order
-                data_lst = [vis006p, vis008p, nir016p, self.data.ir108,
-                            self.data.ir120, self.data.ir134, self.data.satzen, 
-                            self.data.solzen]
+                data_lst = [
+                        self.data.ir108, self.data.ir120, 
+                        self.data.ir134, self.data.satzen, 
+                        self.data.solzen
+                        ]
             else:
                 # list of arrays must be kept in this order!
                 data_lst = [
@@ -199,8 +202,7 @@ class ProcessorBase:
                 logging.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
         if self.variable == 'CBH':
-            all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir108, 
-                                self.data.ir120, self.data.ir134])
+            all_chs = np.array([self.data.ir108, self.data.ir120, self.data.ir134])
         else:
             all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
                                 self.data.ir087, self.data.ir108, self.data.ir120,
@@ -208,12 +210,15 @@ class ProcessorBase:
                     
         # pixels with all IR channels invalid = 1, else 0 (as VIS can be
         # at night
-        all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
+        if self.variable == 'CBH':
+            all_channels_invalid = np.all(np.where(all_chs < 0, 1, 0), axis=0)
+        else:
+            all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
         all_channels_valid = ~all_channels_invalid
 
         if self.cldmask is not None:
             # check if optional cloudmask shape is matching input data shape
-            assert self.cldmask.shape == vis006p.shape
+            assert self.cldmask.shape == self.data.ir108.shape
             # if optional cloudmask is not None mask clear pixels as well
             all_channels_valid = np.logical_and(all_channels_valid,
                                                 self.cldmask == IS_CLOUD)
