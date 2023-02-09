@@ -364,18 +364,18 @@ class ModelSetupCBH:
     def set_models_scalers(self):
         if self.version == 3:
             if self.backend == 'THEANO':
-                low = 'MODEL_CBH_LOWER-0.1587_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                low = 'MODEL_CBH_LOWER-0.1587_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_THEANO__1.0.4__v3.h5'
-                med = 'MODEL_CBH_MEDIAN-0.5000_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                med = 'MODEL_CBH_MEDIAN-0.5000_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_THEANO__1.0.4__v3.h5'
-                upp = 'MODEL_CBH_UPPER-0.8413_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                upp = 'MODEL_CBH_UPPER-0.8413_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_THEANO__1.0.4__v3.h5'
             else:
-                low = 'MODEL_CBH_LOWER-0.1587_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                low = 'MODEL_CBH_LOWER-0.1587_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_TF2__2.4.1__v3.h5'
-                med = 'MODEL_CBH_MEDIAN-0.5000_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                med = 'MODEL_CBH_MEDIAN-0.5000_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_TF2__2.4.1__v3.h5'
-                upp = 'MODEL_CBH_UPPER-0.8413_8_65_65_1_LOSS-QRM_OPT-ADAM'\
+                upp = 'MODEL_CBH_UPPER-0.8413_5_65_65_1_LOSS-QRM_OPT-ADAM'\
                       '_LR-0001_NE-120_BS-200_GSICS_TF2__2.4.1__v3.h5'
 
             scaler = 'SCALER_CBH_GSICS_v3.pkl'
