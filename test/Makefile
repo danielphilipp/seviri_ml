@@ -5,22 +5,22 @@ F90=gfortran
 # full path to your numpy core includes
 # get your numpy include path with:
 # ../get_py_config.sh
-NUMPYINCLUDE=/perm/sf7/dphilipp/software/miniconda3/envs/tfenv/lib/python3.8/site-packages/numpy/core/include/numpy
+NUMPYINCLUDE=/path/to/your/numpy/includes
 
 # full path to your python includes
 # get your Python include path with:
 # ../get_py_config.sh
-PYINCLUDE=/perm/sf7/dphilipp/software/miniconda3/envs/tfenv/include/python3.8
-PYLIB=/perm/sf7/dphilipp/software/miniconda3/envs/tfenv/lib
+PYINCLUDE=/path/to/your/python/includes
+PYLIB=/path/to/your/python/libs
 
 # path to your local seviri_ml directory
-SEVIRI_ML=/perm/sf7/dphilipp/software/seviri_ml
+SEVIRI_ML=/path/to/your/seviri_ml
 
 # NetCDF
-NCDF_LIB = /usr/local/apps/netcdf4/4.7.4/GNU/8.4/lib
-NCDF_INCLUDE = /usr/local/apps/netcdf4/4.7.4/GNU/8.4/include
-NCDF_FORTRAN_LIB = /usr/local/apps/netcdf4/4.7.4/GNU/8.4/lib
-NCDF_FORTRAN_INCLUDE = /usr/local/apps/netcdf4/4.7.4/GNU/8.4/include
+NCDF_LIB = /path/to/your/netcdf/lib
+NCDF_INCLUDE = /path/to/your/netcdf/include
+NCDF_FORTRAN_LIB = /path/to/your/netcdf_fortran/lib
+NCDF_FORTRAN_INCLUDE = /path/to/your/netcdf_fortran/include
 
 
 # set Fortran compiler flags for GNU
