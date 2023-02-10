@@ -22,7 +22,8 @@ import helperfuncs as hf
 import logging
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
-logging.basicConfig(level=logging.DEBUG,
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
                     format=fmt)
 
 
@@ -50,12 +51,12 @@ class NetworkBase:
         """ Load Tensorflow or Theano trained model (.h5 file) from disk. """
 
         if self.backend.lower() == 'tensorflow2':
-            logging.info('Setting KERAS_BACKEND env. variable  to tensorflow')
+            logger.info('Setting KERAS_BACKEND env. variable  to tensorflow')
             os.environ['KERAS_BACKEND'] = 'tensorflow'
             from tensorflow.keras.models import load_model
 
         elif self.backend.lower() == 'theano':
-            logging.info('Setting KERAS_BACKEND env. variable  to theano')
+            logger.info('Setting KERAS_BACKEND env. variable  to theano')
             os.environ['KERAS_BACKEND'] = 'theano'
 
             with warnings.catch_warnings():

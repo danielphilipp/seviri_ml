@@ -13,9 +13,9 @@ from definitions import CBHVersion3Constants
 from definitions import MLAYVersion3Constants
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
-logging.basicConfig(level=logging.DEBUG,
-                    format=fmt
-                    )
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                    format=fmt)
 
 
 def get_backend_name(backend_env):
@@ -26,7 +26,7 @@ def get_backend_name(backend_env):
     else:
         # default behaviour
         backend = 'TENSORFLOW2'
-        logging.info('SEVIRI_ML_BACKEND env variable not defined. '
+        logger.info('SEVIRI_ML_BACKEND env variable not defined. '
                      'Setting backend to default {}'.format(backend))
 
     if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
@@ -41,41 +41,41 @@ def get_backend_name(backend_env):
 def get_parameters(version, variable):
     if variable in ['CPH', 'CMA']:
         if version == 1:
-            logging.info('Loading version 1 constants')
+            logger.info('Loading version 1 constants')
             return CMACPHVersion1Constants()
         if version == 2:
-            logging.info('Loading version 2 constants')
+            logger.info('Loading version 2 constants')
             return CMACPHVersion2Constants()
         elif version == 3:
-            logging.info('Loading version 3 constants')
+            logger.info('Loading version 3 constants')
             return CMACPHVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))
     elif variable == 'CTP':
         if version == 3:
-            logging.info('Loading version 3 constants')
+            logger.info('Loading version 3 constants')
             return CTPVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))
     elif variable == 'CTT':
         if version == 3:
-            logging.info('Loading version 3 constants')
+            logger.info('Loading version 3 constants')
             return CTTVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))
     elif variable == 'MLAY':
         if version == 3:
-            logging.info('Loading version 3 constants')
+            logger.info('Loading version 3 constants')
             return MLAYVersion3Constants()
         else:
             raise Exception('No constants defined for version '
                             '{}'.format(version))
     elif variable == 'CBH':
         if version == 3:
-            logging.info('Loading version 3 constants')
+            logger.info('Loading version 3 constants')
             return CBHVersion3Constants()
         else:
             raise Exception('No constants defined for version '
@@ -122,7 +122,7 @@ def check_theano_version(modelpath):
               'and your currently used version {}. Version mismatch may' + \
               'lead to errors or unexpected behaviour.'
         msg = msg.format(cot_version, curr_version)
-        logging.warning(msg)
+        logger.warning(msg)
 
 
 def check_tensorflow_version(modelpath):
@@ -138,7 +138,7 @@ def check_tensorflow_version(modelpath):
               'and your currently used version {}. Version mismatch may' + \
               'lead to errors or unexpected behaviour.'
         msg = msg.format(cot_version, curr_version)
-        logging.warning(msg)
+        logger.warning(msg)
 
 
 class ConfigTheano:
@@ -186,4 +186,4 @@ class ConfigTheano:
             else:
                 msg = 'Cannot delete {} because not existing'
                 msg = msg.format(self.cdir_pid)
-                logging.warning(msg)
+                logger.warning(msg)

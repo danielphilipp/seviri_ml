@@ -8,7 +8,8 @@ import neuralnet
 import logging
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
-logging.basicConfig(level=logging.DEBUG,
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
                     format=fmt)
 
 
@@ -40,7 +41,7 @@ class ProcessorBase:
             nir016p = self.data.nir016.copy()
 
         if self.do_correct_nasa_impf in [1, 2, 3, 4] and self.variable != 'CBH':
-            logging.info('Correcting VIS calibration from NASA to '
+            logger.info('Correcting VIS calibration from NASA to '
                          'IMPF for MSG{:d}'.format(self.do_correct_nasa_impf))
 
             c = correct_nasa_impf(vis006p, vis008p, nir016p,
@@ -48,9 +49,9 @@ class ProcessorBase:
             vis006p, vis008p, nir016p = c
 
         elif self.do_correct_nasa_impf == 0 or self.variable == 'CBH':
-            logging.info('Not correcting VIS calibration from NASA to IMPF.')
+            logger.info('Not correcting VIS calibration from NASA to IMPF.')
         else:
-            logging.info('correct_vis_cal_nasa_to_impf value {} '
+            logger.info('correct_vis_cal_nasa_to_impf value {} '
                          'not known. However, not correcting VIS channel '
                          'calibration from NASA to '
                          'IMPF.'.format(self.do_correct_nasa_impf))
@@ -73,7 +74,7 @@ class ProcessorBase:
 
         # remove true reflectances
         if self.undo_true_refl and self.variable != 'CBH':
-            logging.info('Removing true reflectances')
+            logger.info('Removing true reflectances')
             cond = np.logical_and(self.data.solzen >= 0.,
                                   self.data.solzen < 90.)
             cos_sza = np.cos(np.deg2rad(self.data.solzen))
@@ -81,7 +82,7 @@ class ProcessorBase:
             vis008p = np.where(cond, vis008p * cos_sza, vis008p)
             nir016p = np.where(cond, nir016p * cos_sza, nir016p)
         else:
-            logging.info('Not removing true reflectances')
+            logger.info('Not removing true reflectances')
 
         if self.data.ir087 is not None and self.data.ir108 is not None and \
            self.data.ir120 is not None:
@@ -199,7 +200,7 @@ class ProcessorBase:
 
                 self.ir039_invalid = ir039_invalid_disk
                 self.n_ir039_invalid = np.sum(self.ir039_invalid)
-                logging.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
+                logger.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
         if self.variable == 'CBH':
             all_chs = np.array([self.data.ir108, self.data.ir120, self.data.ir134])

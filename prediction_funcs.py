@@ -12,7 +12,8 @@ import helperfuncs as hf
 import seviri_ml_core
 
 fmt = '%(levelname)s : %(filename)s : %(message)s'
-logging.basicConfig(level=logging.DEBUG,
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
                     format=fmt)
 
 # set backend name from environment variable
@@ -32,7 +33,7 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 make_binary=True, make_uncertainty=True):
     """ Run cloud mask (CMA) prediction. """
     
-    logging.info('---------- RUNNING CMA ANN ----------')
+    logger.info('---------- RUNNING CMA ANN ----------')
 
     v = 'CMA'
 
@@ -55,7 +56,7 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction CMA: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction CMA: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_binary:
@@ -76,7 +77,7 @@ def predict_cph(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 cldmask=None, make_binary=True, make_uncertainty=True):
     """ Run cloud phase (CPH) prediction. """
     
-    logging.info('---------- RUNNING CPH ANN ----------')
+    logger.info('---------- RUNNING CPH ANN ----------')
 
     v = 'CPH'
 
@@ -97,7 +98,7 @@ def predict_cph(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction CPH: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction CPH: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_binary:
@@ -118,7 +119,7 @@ def predict_ctp(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 cldmask=None, make_uncertainty=True):
     """ Run cloud top pressure (CTP) prediction. """
 
-    logging.info('---------- RUNNING CTP ANN ----------')
+    logger.info('---------- RUNNING CTP ANN ----------')
 
     v = 'CTP'
 
@@ -139,14 +140,14 @@ def predict_ctp(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction CTP: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction CTP: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_uncertainty:
         # run uncertainty calculation
         start = time.time()
         uncertainty = proc.get_uncertainty()
-        logging.info('Time for calculating uncertainty: '
+        logger.info('Time for calculating uncertainty: '
                      '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
@@ -159,7 +160,7 @@ def predict_ctt(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 cldmask=None, make_uncertainty=True):
     """ Run cloud top temperature (CTT) prediction. """
 
-    logging.info('---------- RUNNING CTT ANN ----------')
+    logger.info('---------- RUNNING CTT ANN ----------')
 
     v = 'CTT'
 
@@ -180,14 +181,14 @@ def predict_ctt(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction CTT: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction CTT: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_uncertainty:
         # run uncertainty calculation
         start = time.time()
         uncertainty = proc.get_uncertainty()
-        logging.info('Time for calculating uncertainty: '
+        logger.info('Time for calculating uncertainty: '
                      '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
@@ -213,7 +214,7 @@ def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None,
                              [CBH, CBH 1-sigma uncertainty]
     """
 
-    logging.info('---------- RUNNING CBH ANN ----------')
+    logger.info('---------- RUNNING CBH ANN ----------')
 
     v = 'CBH'
 
@@ -236,14 +237,14 @@ def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction CBH: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction CBH: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_uncertainty:
         # run uncertainty calculation
         start = time.time()
         uncertainty = proc.get_uncertainty()
-        logging.info('Time for calculating uncertainty: '
+        logger.info('Time for calculating uncertainty: '
                      '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
@@ -256,7 +257,7 @@ def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                  cldmask=None, make_binary=True, make_uncertainty=True):
     """ Run multilayer flag (MLAY) prediction. """
     
-    logging.info('---------- RUNNING MLAY ANN ----------')
+    logger.info('---------- RUNNING MLAY ANN ----------')
 
     v = 'MLAY'
 
@@ -277,7 +278,7 @@ def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
-    logging.info("Time for prediction MLAY: {:.3f}".format(time.time() - start))
+    logger.info("Time for prediction MLAY: {:.3f}".format(time.time() - start))
     results.append(prediction)
 
     if make_binary:
