@@ -95,5 +95,5 @@ INFORMATION ABOUT MODELS
 
 - Version 3:
 
-   Models were re-trained with all 2018 months of CALIOP v4 data collocated with SEVIRI measurements, a land-sea mask and ERA5 skin temperature. Solar and satellite zenith angles have been added to the network input features. Theresholds and uncertainty characterization has been updated. CTP and MLAY has been added to the available variables. 
+   All models except the CBH model were re-trained with all 2018 months of CALIOP v4 data collocated with SEVIRI measurements, a land-sea mask and ERA5 skin temperature. Solar and satellite zenith angles have been added to the network input features. Theresholds and uncertainty characterization has been updated. CTP and MLAY has been added to the available variables. The CBH model relies only on IR108, IR120, IR134, solzen and satzen. The SEVIRI measurements have been collocated against the 2B-GEOPROF-LIDAR (CALIPSO LIDAR combined with Cloudsat RADAR) product to get a better estimate of the cloud base.
 
