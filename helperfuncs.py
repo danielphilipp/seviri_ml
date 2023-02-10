@@ -27,7 +27,7 @@ def get_backend_name(backend_env):
         # default behaviour
         backend = 'TENSORFLOW2'
         logger.info('SEVIRI_ML_BACKEND env variable not defined. '
-                     'Setting backend to default {}'.format(backend))
+                    'Setting backend to default {}'.format(backend))
 
     if backend in ['TENSORFLOW', 'TF', 'TF2', 'TENSORFLOW2']:
         backend = 'TENSORFLOW2'

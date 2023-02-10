@@ -187,20 +187,22 @@ class SpectralBandAdjustment:
                                                         )
                     if self.verbose:
                         print('   >>> Transformed {} with slope={:.4f} and '
-                          'offset={:.4f}'.format(ch, slope, offset))
+                              'offset={:.4f}'.format(ch, slope, offset))
                 else:
                     if self.isccpng_wmo_id is None:
                         raise Exception('isccpng_wmo_id must be provided if '
                                         'input_sat is ISCCP-NG')
-                    for sat_id  in WMO_ID_MAPPING.keys():
-                        slope, offset = self._get_coeffs(ch, WMO_ID_MAPPING[sat_id])
+                    for sat_id in WMO_ID_MAPPING.keys():
+                        slope, offset = self._get_coeffs(
+                                                   ch,
+                                                   WMO_ID_MAPPING[sat_id])
                         self.transformed[ch] = np.where(
-                                                self.isccpng_wmo_id == sat_id, 
+                                                self.isccpng_wmo_id == sat_id,
                                                 self._apply_transform(
-                                                            slope, 
-                                                            offset, 
-                                                            self.transformed[ch]
-                                                            ), 
+                                                       slope,
+                                                       offset,
+                                                       self.transformed[ch]
+                                                       ),
                                                 self.transformed[ch]
                                                 )
 
@@ -232,28 +234,31 @@ class SpectralBandAdjustment:
                 if self.input_sat != 'ISCCP-NG':
                     slope, offset = self._get_coeffs(ch, self.input_sat)
                     self.transformed[ch] = self._apply_inverse_transform(
-                                                            slope,
-                                                            offset,
-                                                            self.transformed[ch])
+                                                        slope,
+                                                        offset,
+                                                        self.transformed[ch])
                     if self.verbose:
-                        print('   >>> Inverse transformed {} with slope={:.4f} '
-                              'and offset={:.4f}'.format(ch, slope, offset))
+                        msg = '   >>> Inverse transformed {} with  ' \
+                              'slope={:.4f} and offset={:.4f}'
+                        print(msg.format(ch, slope, offset))
                 else:
-                   if self.isccpng_wmo_id is None:
+                    if self.isccpng_wmo_id is None:
                         raise Exception('isccpng_wmo_id must be provided if '
                                         'input_sat is ISCCP-NG')
-                   for sat_id in WMO_ID_MAPPING.keys():
-                       slope, offset = self._get_coeffs(ch, WMO_ID_MAPPING[sat_id])
-                       self.transformed[ch] = np.where(
-                                               self.isccpng_wmo_id == sat_id,
-                                               self._apply_inverse_transform(
-                                                           slope,
-                                                           offset,
-                                                           self.transformed[ch]
-                                                           ),
-                                               self.transformed[ch]                                                
-                                               )
-                                               
+                    for sat_id in WMO_ID_MAPPING.keys():
+                        slope, offset = self._get_coeffs(
+                                                       ch,
+                                                       WMO_ID_MAPPING[sat_id])
+                        self.transformed[ch] = np.where(
+                                                self.isccpng_wmo_id == sat_id,
+                                                self._apply_inverse_transform(
+                                                        slope,
+                                                        offset,
+                                                        self.transformed[ch]
+                                                        ),
+                                                self.transformed[ch]
+                                                )
+
             else:
                 if self.verbose:
                     print('   >>> Channel {} not found in input_sat_data '

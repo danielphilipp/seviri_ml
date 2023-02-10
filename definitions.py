@@ -398,7 +398,6 @@ class ModelSetupCBH:
                                      scaler)
 
 
-
 class ModelSetupMLAY:
     def __init__(self, version, backend, data_path):
         self.version = version

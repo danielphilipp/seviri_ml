@@ -40,9 +40,10 @@ class ProcessorBase:
             vis008p = self.data.vis008.copy()
             nir016p = self.data.nir016.copy()
 
-        if self.do_correct_nasa_impf in [1, 2, 3, 4] and self.variable != 'CBH':
+        if self.do_correct_nasa_impf in [1, 2, 3, 4] \
+                and self.variable != 'CBH':
             logger.info('Correcting VIS calibration from NASA to '
-                         'IMPF for MSG{:d}'.format(self.do_correct_nasa_impf))
+                        'IMPF for MSG{:d}'.format(self.do_correct_nasa_impf))
 
             c = correct_nasa_impf(vis006p, vis008p, nir016p,
                                   self.do_correct_nasa_impf)
@@ -52,9 +53,9 @@ class ProcessorBase:
             logger.info('Not correcting VIS calibration from NASA to IMPF.')
         else:
             logger.info('correct_vis_cal_nasa_to_impf value {} '
-                         'not known. However, not correcting VIS channel '
-                         'calibration from NASA to '
-                         'IMPF.'.format(self.do_correct_nasa_impf))
+                        'not known. However, not correcting VIS channel '
+                        'calibration from NASA to '
+                        'IMPF.'.format(self.do_correct_nasa_impf))
 
         if self.variable != 'CBH':
             vis006p[vis006p < 0] = 0
@@ -70,7 +71,9 @@ class ProcessorBase:
 
         if self.data.skt is not None:
             # change fill value of skt from >> 1000 to SREAL_FILL_VALUE
-            skt = np.where(self.data.skt > 1000, SREAL_FILL_VALUE, self.data.skt)
+            skt = np.where(self.data.skt > 1000,
+                           SREAL_FILL_VALUE,
+                           self.data.skt)
 
         # remove true reflectances
         if self.undo_true_refl and self.variable != 'CBH':
@@ -112,8 +115,8 @@ class ProcessorBase:
             if self.variable == 'CBH':
                 # list must be kept in order
                 data_lst = [
-                        self.data.ir108, self.data.ir120, 
-                        self.data.ir134, self.data.satzen, 
+                        self.data.ir108, self.data.ir120,
+                        self.data.ir134, self.data.satzen,
                         self.data.solzen
                         ]
             else:
@@ -203,18 +206,21 @@ class ProcessorBase:
                 logger.info('N_IR039_INVALID: ' + str(self.n_ir039_invalid))
 
         if self.variable == 'CBH':
-            all_chs = np.array([self.data.ir108, self.data.ir120, self.data.ir134])
+            all_chs = np.array([self.data.ir108, self.data.ir120,
+                                self.data.ir134])
         else:
             all_chs = np.array([vis006p, vis008p, nir016p, self.data.ir039,
-                                self.data.ir087, self.data.ir108, self.data.ir120,
-                                self.data.ir134, self.data.ir062, self.data.ir073])
-                    
+                                self.data.ir087, self.data.ir108,
+                                self.data.ir120, self.data.ir134,
+                                self.data.ir062, self.data.ir073])
+
         # pixels with all IR channels invalid = 1, else 0 (as VIS can be
         # at night
         if self.variable == 'CBH':
             all_channels_invalid = np.all(np.where(all_chs < 0, 1, 0), axis=0)
         else:
-            all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0), axis=0)
+            all_channels_invalid = np.all(np.where(all_chs[3:] < 0, 1, 0),
+                                          axis=0)
         all_channels_valid = ~all_channels_invalid
 
         if self.cldmask is not None:
@@ -235,15 +241,16 @@ class ProcessorBase:
         if self.opts['CORRECT_IR039_OUT_OF_RANGE']:
             # if CTP or CTT replace invalid 3.9 pixel BT with 10.8 BT
             if self.variable in ['CTP', 'CTT']:
-                self.scaled_data[:, 0] = np.where(self.ir039_invalid.ravel() == 1,
-                                                  self.scaled_data[:, 3],
-                                                  self.scaled_data[:, 0])
+                self.scaled_data[:, 0] = np.where(
+                                         self.ir039_invalid.ravel() == 1,
+                                         self.scaled_data[:, 3],
+                                         self.scaled_data[:, 0])
 
 
 class InputData:
-    def __init__(self, vis006=None, vis008=None, nir016=None, 
+    def __init__(self, vis006=None, vis008=None, nir016=None,
                  ir039=None, ir062=None, ir073=None, ir087=None,
-                 ir108=None, ir120=None, ir134=None, lsm=None, 
+                 ir108=None, ir120=None, ir134=None, lsm=None,
                  skt=None, solzen=None, satzen=None):
         self.vis006 = vis006
         self.vis008 = vis008
@@ -1264,7 +1271,6 @@ class ProcessorMLAY(ProcessorBase):
         # mask pixels where regression array has fill value
         binary[self.estimate == SREAL_FILL_VALUE] = BYTE_FILL_VALUE
         return binary
-
 
     def _uncertainty(self):
         """ Calculate CMA/CPH uncertainy. """

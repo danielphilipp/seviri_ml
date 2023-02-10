@@ -32,7 +32,7 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
                 make_binary=True, make_uncertainty=True):
     """ Run cloud mask (CMA) prediction. """
-    
+
     logger.info('---------- RUNNING CMA ANN ----------')
 
     v = 'CMA'
@@ -52,7 +52,7 @@ def predict_cma(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
             data, undo_true_refl, correct_vis_cal_nasa_to_impf,
             cldmask, v, opts
             )
-    
+
     # run prediction
     start = time.time()
     prediction = proc.get_prediction()
@@ -76,7 +76,7 @@ def predict_cph(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                 undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
                 cldmask=None, make_binary=True, make_uncertainty=True):
     """ Run cloud phase (CPH) prediction. """
-    
+
     logger.info('---------- RUNNING CPH ANN ----------')
 
     v = 'CPH'
@@ -148,7 +148,7 @@ def predict_ctp(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         start = time.time()
         uncertainty = proc.get_uncertainty()
         logger.info('Time for calculating uncertainty: '
-                     '{:.3f}'.format(time.time() - start))
+                    '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
     return results
@@ -189,14 +189,14 @@ def predict_ctt(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
         start = time.time()
         uncertainty = proc.get_uncertainty()
         logger.info('Time for calculating uncertainty: '
-                     '{:.3f}'.format(time.time() - start))
+                    '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
     return results
 
 
-def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None, 
-                cldmask=None, make_uncertainty=True): 
+def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None,
+                cldmask=None, make_uncertainty=True):
     """
         Main function that calls the neural network for CTT prediction.
 
@@ -220,7 +220,7 @@ def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None,
 
     # put data into structure
     data = seviri_ml_core.InputData(
-        ir108=ir108, ir120=ir120, ir134=ir134, 
+        ir108=ir108, ir120=ir120, ir134=ir134,
         solzen=solzen, satzen=satzen)
 
     undo_true_refl = False
@@ -245,7 +245,7 @@ def predict_cbh(ir108, ir120, ir134, solzen=None, satzen=None,
         start = time.time()
         uncertainty = proc.get_uncertainty()
         logger.info('Time for calculating uncertainty: '
-                     '{:.3f}'.format(time.time() - start))
+                    '{:.3f}'.format(time.time() - start))
         results.append(uncertainty)
 
     return results
@@ -256,7 +256,7 @@ def predict_mlay(vis006, vis008, nir016, ir039, ir062, ir073, ir087,
                  undo_true_refl=False, correct_vis_cal_nasa_to_impf=0,
                  cldmask=None, make_binary=True, make_uncertainty=True):
     """ Run multilayer flag (MLAY) prediction. """
-    
+
     logger.info('---------- RUNNING MLAY ANN ----------')
 
     v = 'MLAY'
