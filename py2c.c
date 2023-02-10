@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <py2c.h>
 
+
 void py_ann_mlay(void *vis006, void *vis008, void *nir016, void *ir039,
                     void *ir062, void *ir073, void *ir087, void *ir108,
                     void *ir120, void *ir134, void *lsm, void *skt,
@@ -26,10 +27,11 @@ void py_ann_mlay(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_Initialize();
     }
 
-    if(PyArray_API == NULL)
-    {
-        import_array();
-    }
+    init_numpy();
+    //if(PyArray_API == NULL)
+    //{
+    //    import_array();
+    //}
 
     // declare Python Objects
     npy_intp dims[2];
@@ -182,9 +184,7 @@ void py_ann_ctp(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_Initialize();
     }
  
-    if(PyArray_API == NULL){
-        import_array();
-    }
+    init_numpy();
     
     // declare Python Objects    
     npy_intp dims[2];
@@ -330,9 +330,7 @@ void py_ann_ctt(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_Initialize();
     }
 
-    if(PyArray_API == NULL){
-        import_array();
-    }
+    init_numpy();
 
     // declare Python Objects
     npy_intp dims[2];
@@ -475,9 +473,7 @@ void py_ann_cbh(void *ir108, void *ir120, void *ir134, void *solzen, void *satze
         Py_Initialize();
     }
 
-    if(PyArray_API == NULL){
-        import_array();
-    }
+    init_numpy();
 
     // declare Python Objects
     npy_intp dims[2];
@@ -587,11 +583,8 @@ void py_ann_cma(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_Initialize();
     }
     
-    if(PyArray_API == NULL)
-    {
-        import_array(); 
-    }
-     
+    init_numpy();
+
     // declare Python Objects 
     npy_intp dims[2];
     dims[0] = *nx;
@@ -741,10 +734,7 @@ void py_ann_cph(void *vis006, void *vis008, void *nir016, void *ir039,
         Py_Initialize();
     }
 
-    if(PyArray_API == NULL)
-    {
-        import_array();
-    }
+    init_numpy();
 
     // declare Python Objects
     npy_intp dims[2];

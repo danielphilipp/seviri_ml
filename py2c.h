@@ -2,6 +2,24 @@
 #ifndef PY2C_H
 #define PY2C_H
 
+#if PY_MAJOR_VERSION >=3
+int init_numpy()
+{
+    if(PyArray_API == NULL)
+    {
+        import_array();
+    }
+}
+#else
+void init_numpy()
+{
+    if(PyArray_API == NULL)
+    {
+        import_array();
+    }
+}
+#endif
+
 void py_ann_mlay(void *vis006, void *vis008, void *nir016, void *ir039,
                     void *ir062, void *ir073, void *ir087, void *ir108,
                     void *ir120, void *ir134, void *lsm, void *skt,
