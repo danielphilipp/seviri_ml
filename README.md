@@ -14,9 +14,9 @@ Machine learning based module to retrieve a set of cloud variables from Spinning
 - Cloud Base Height (CBH) - prediction_funcs.predict_cbh()
 
 
-The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP, CTT and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
+The repository contains pre-trained networks which can easily be used. Networks trained with Theano and Tensorflow2 backends are available. It is written in Python and makes use of the Keras machine learining functionalities (https://keras.io/). A Fortran and C interface is excluded as well. Also to be used as an external module with the ORAC retrieval software (https://github.com/ORAC_CC/orac). The CMA and CPH networks are available in three version (1-3). CTP, CTT, CBH and MLAY is only available for version 3. Version 3 is the default for all networks and highly recommended. 
 
-Additionally, a neural network was trained to derive a MODIS-like true colour RGB image from SEVIRI measurements (/modis_like_rgb). The network was trained against MODIS MOD_143D_RR/MYD_143D_RR true colour RGB values using the time information from the MOD09CMG/MYD09CMG product. 
+Additionally, a neural network was trained to derive a MODIS-like true colour RGB image from SEVIRI measurements (/modis_like_rgb). The network was trained against MODIS MOD_143D_RR/MYD_143D_RR true colour RGB values using the time and geolocation information from the MOD09CMG/MYD09CMG product. 
 
 REQUIREMENTS
 -------------------------------------------
@@ -43,12 +43,12 @@ Both are provided in './data/v{1,2,3}'. To select a certain backend set environm
 USE WITH PURE PYTHON
 -------------------------------------------
 1. Import prediction_funcs into your main script.
-2. Call prediction_funcs.predict_{cma, cph, ctp, mlay}()
+2. Call prediction_funcs.predict_{cma, cph, cbh, ctp, mlay}()
 3. The function returns a list with following structure: 
-   - predict_cma/predict_cph/predict_mlay(args, kwargs): [COT_regression, CMA, CMA_uncertainty, CPH_regression, CPH, CPH_uncertainty]
-   - predict_ctp(args, kwargs): [CTP, CTP_uncertainty]
+   - predict_cma/predict_cph/predict_mlay(args, kwargs): e.g. [CPH_regression, CPH, CPH_uncertainty]
+   - predict_ctp/predict_ctt/predict_cbh(args, kwargs): e.g. [CTP, CTP_uncertainty]
 
-undo_true_refl is a logical variable specifying if visible channels (vis006, vis008, ir016) should be multiplied by the cosine of the solar zenith angle to remove this normalization (default False). correct_vis_cal_nasa_to_impf is a integer variable specifying if the visible channels should be linearily corrected from the NASA calibration to the IMPF calibration with which the networks were trained. 0 = No correction if your visible channels were calibrated with IMPF coefficients. 1 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG1. 2 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG2. 3 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG3. 4 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG4.
+undo_true_refl is a logical variable specifying if visible channels (vis006, vis008, ir016) should be multiplied by the cosine of the solar zenith angle to remove this normalization (default False). correct_vis_cal_nasa_to_impf is a integer variable specifying if the visible channels should be linearily corrected from the NASA calibration to the IMPF calibration with which the networks were trained. 0 = No correction if your visible channels were calibrated with IMPF coefficients. 1 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG1. 2 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG2. 3 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG3. 4 = Your visible channels are calibrated with the NASA calibration and your satellite is Meteosat MSG4. Visible channels are expected to be [0, 1].
 
 COMPILE
 -------------------------------------------
@@ -78,6 +78,8 @@ USE WITH ORAC
 6. Enable ORAC use with preproc driver option 
    CMA/CPH: "USE_SEVIRI_ANN_CMA_CPH=T" (default is to False)
    CTP: "USE_SEVIRI_ANN_CTP_FG=T" (default is to False)
+   CTT: "USE_SEVIRI_ANN_CTT=T" (default is to False)
+   CBH: "USE_SEVIRI_ANN_CBH=T" (default is to False)
    MLAY: "USE_SEVIRI_ANN_MLAY=T" (default is to False)
  
 INFORMATION ABOUT MODELS
