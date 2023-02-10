@@ -28,10 +28,6 @@ void py_ann_mlay(void *vis006, void *vis008, void *nir016, void *ir039,
     }
 
     init_numpy();
-    //if(PyArray_API == NULL)
-    //{
-    //    import_array();
-    //}
 
     // declare Python Objects
     npy_intp dims[2];
